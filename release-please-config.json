@@ -9,6 +9,10 @@
       "package-name": "job-apply-cli",
       "extra-files": [
         {
+          "type": "generic",
+          "path": "src/job_apply_agent/__init__.py"
+        },
+        {
           "type": "toml",
           "path": "uv.lock",
           "jsonpath": "$.package[?(@.name=='job-apply-cli')].version"

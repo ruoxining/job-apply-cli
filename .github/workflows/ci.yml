@@ -48,7 +48,16 @@ jobs:
       - run: node --test tests/lcu_fixture_policy.test.mjs
       - name: Audit locked dependencies including optional features
         run: |
-          uv export --frozen --all-extras --all-groups --no-emit-project --no-hashes > /tmp/dependencies.txt
+          uv export --frozen --all-extras --all-groups --no-emit-project --no-hashes > /tmp/dependencies-locked.txt
+          # PyPI advisories use the public version for the official PyTorch CPU wheel.
+          # Preserve every requirement/marker; normalize only torch's known +cpu suffix.
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          import re
+          requirements = Path("/tmp/dependencies-locked.txt").read_text()
+          requirements = re.sub(r"(?m)^(torch==[^;+\s]+)\+cpu(?=\s*(?:;|$))", r"\1", requirements)
+          Path("/tmp/dependencies.txt").write_text(requirements)
+          PYTHON
           uv run --frozen pip-audit --strict --no-deps --disable-pip -r /tmp/dependencies.txt
 
   build:

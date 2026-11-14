@@ -2,6 +2,11 @@
 
 English | [简体中文](../development.md)
 
+Collaborators should use separate checkouts, fictional data, and their own `.env`, keep
+`ALLOW_LIVE_SUBMIT=false`, and deliver changes through branches and pull requests. Run the
+checks below before merging. See the [security review and collaboration limits](security-review.md)
+for known risks and repository protections that still need to be configured.
+
 ```bash
 uv sync --frozen --extra test --extra browser
 uv run playwright install chromium

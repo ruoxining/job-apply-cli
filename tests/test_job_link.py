@@ -181,3 +181,44 @@ async def test_fetch_rejects_oversized_pages():
 
 async def _noop() -> None:
     return None
+
+
+async def test_oversized_stream_is_closed_before_reading_the_whole_body():
+    class LargeStream(httpx.AsyncByteStream):
+        chunks_read = 0
+        closed = False
+
+        async def __aiter__(self):
+            for _ in range(1000):
+                self.chunks_read += 1
+                yield b"x" * 65536
+
+        async def aclose(self):
+            self.closed = True
+
+    stream = LargeStream()
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, stream=stream))
+    async with httpx.AsyncClient(transport=transport) as client:
+        with pytest.raises(CollectorError, match="2 MB"):
+            await fetch_job_url(
+                "https://example.com/jobs/1", client=client, host_validator=lambda url: _noop()
+            )
+    assert stream.chunks_read <= MAX_HTML_BYTES // 65536 + 2
+    assert stream.closed
+
+
+async def test_redirect_policy_overrides_client_defaults():
+    requests = []
+
+    def handler(request):
+        requests.append(str(request.url))
+        return httpx.Response(302, headers={"Location": "http://127.0.0.1/internal"})
+
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler), follow_redirects=True
+    ) as client:
+        with pytest.raises(CollectorError, match="不允许自动跟随跳转"):
+            await fetch_job_url(
+                "https://example.com/jobs/1", client=client, host_validator=lambda url: _noop()
+            )
+    assert requests == ["https://example.com/jobs/1"]

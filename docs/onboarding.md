@@ -102,6 +102,17 @@ uv run job-apply-agent application-report
 
 ## 6. 按需启用服务
 
+API 使用本地实例专用的 Bearer Token。运行下面命令生成随机值，把结果写入被忽略的
+`.env` 中的 `API_TOKEN`，不要复制到公开示例或提交记录：
+
+```bash
+python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
+```
+
+业务接口要求 `Authorization: Bearer <token>`；未配置或短于 32 字符时返回 503，
+凭证缺失或错误时返回 401。`/health` 不需要 token。此 token 提供该实例全部 API 权限，
+没有逐人角色或候选人隔离；协作者应使用自己的测试实例和虚构资料。
+
 先保持 `ALLOW_LIVE_SUBMIT=false`。只有需要队列时才启动 Redis；只有需要 Telegram 审核
 或通知时才配置 bot token 和唯一允许的 chat ID；模型和浏览器也单独配置。
 参见 [运行说明](operations.md) 和 [数据边界](data-privacy.md)。凭证始终放在被忽略的 `.env`

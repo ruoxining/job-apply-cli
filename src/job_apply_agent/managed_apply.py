@@ -37,8 +37,9 @@ def dispatch_managed_application(
     """
     factory = session_factory or get_session_factory()
     settings = get_settings()
-    if not settings.allow_live_submit:
-        raise ManagedApplicationError("ALLOW_LIVE_SUBMIT=false; managed dispatch is disabled")
+    live_error = settings.live_submission_error()
+    if live_error:
+        raise ManagedApplicationError(live_error)
     configuration_error = settings.cua_configuration_error()
     if configuration_error:
         raise ManagedApplicationError(configuration_error)

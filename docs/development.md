@@ -2,6 +2,10 @@
 
 [English](en/development.md) | 简体中文
 
+协作者使用独立 checkout、虚构资料和自己的 `.env`，保持 `ALLOW_LIVE_SUBMIT=false`，
+通过分支和 PR 交付。合并前运行下列检查；已有风险和未完成的仓库保护见
+[安全检查与协作边界](security-review.md)。
+
 ```bash
 uv sync --frozen --extra test --extra browser
 uv run playwright install chromium

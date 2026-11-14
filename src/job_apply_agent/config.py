@@ -9,11 +9,14 @@ from typing import Any, Literal
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+LIVE_SUBMIT_ACK = "I_UNDERSTAND_REAL_APPLICATIONS_WILL_BE_SENT"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     app_env: str = "development"
+    api_token: str | None = Field(default=None, repr=False)
     database_url: str = "sqlite:///./private/job_apply_agent.sqlite3"
     redis_url: str = "redis://localhost:6379/0"
     telegram_bot_token: str | None = None
@@ -42,6 +45,7 @@ class Settings(BaseSettings):
     cua_instructions: str = ""
     submit_confirmation_timeout_seconds: int = Field(default=20, ge=5, le=120)
     allow_live_submit: bool = False
+    live_submit_ack: str = ""
     daily_fetch_limit: int = Field(default=20, ge=1, le=100)
     daily_auto_submit_limit: int = Field(default=10, ge=0, le=100)
     high_value_threshold: int = Field(default=65, ge=0, le=100)
@@ -81,11 +85,19 @@ class Settings(BaseSettings):
 
     @field_validator(
         "glm_api_key",
+        "api_token",
         mode="before",
     )
     @classmethod
     def empty_secret_is_unset(cls, value: Any) -> Any:
         return None if value == "" else value
+
+    def live_submission_error(self) -> str | None:
+        if not self.allow_live_submit:
+            return "ALLOW_LIVE_SUBMIT=false; no browser submission was started"
+        if self.live_submit_ack != LIVE_SUBMIT_ACK:
+            return "LIVE_SUBMIT_ACK must explicitly acknowledge real applications"
+        return None
 
     @field_validator("cua_browser_input_route")
     @classmethod

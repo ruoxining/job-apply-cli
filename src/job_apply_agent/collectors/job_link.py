@@ -410,15 +410,20 @@ async def fetch_job_url(
         headers={"User-Agent": "job-apply-agent/0.1 (+personal job ingestion)"},
     )
     try:
-        response = await client.get(url)
-        if response.is_redirect:
-            raise CollectorError(
-                "通用岗位链接不允许自动跟随跳转，请发送最终 URL"
-            )
-        response.raise_for_status()
-        if len(response.content) > MAX_HTML_BYTES:
-            raise CollectorError("岗位页面超过 2 MB，拒绝解析")
-        return parse_job_page(url, response.text)
+        # Enforce redirect policy even if an injected client follows redirects.
+        async with client.stream("GET", url, follow_redirects=False) as response:
+            if response.is_redirect:
+                raise CollectorError(
+                    "通用岗位链接不允许自动跟随跳转，请发送最终 URL"
+                )
+            response.raise_for_status()
+            content = bytearray()
+            async for chunk in response.aiter_bytes(chunk_size=65536):
+                if len(content) + len(chunk) > MAX_HTML_BYTES:
+                    raise CollectorError("岗位页面超过 2 MB，拒绝解析")
+                content.extend(chunk)
+            html = content.decode(response.encoding or "utf-8", errors="replace")
+            return parse_job_page(url, html)
     except httpx.HTTPError as exc:
         raise CollectorError("无法读取岗位页面") from exc
     finally:

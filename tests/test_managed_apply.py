@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import pytest
 
 from job_apply_agent import managed_apply
-from job_apply_agent.config import Settings
+from job_apply_agent.config import LIVE_SUBMIT_ACK, Settings
 from job_apply_agent.domain.enums import ApplicationState
 from job_apply_agent.models import JobPostingRecord
 
@@ -28,7 +28,7 @@ def job(*, state: str = ApplicationState.MATERIALS_READY.value) -> JobPostingRec
 
 def configured_settings() -> Settings:
     return Settings(
-        allow_live_submit=True,
+        allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK,
         cua_enabled=True,
         glm_api_key="secret",
         browser_headless=False,

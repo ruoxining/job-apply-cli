@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import subprocess
 import sys
 from typing import Any
@@ -24,7 +25,20 @@ git rev-parse --short HEAD 2>/dev/null || printf '%s\n' 'unknown'
 printf '%s\n' '__COMPOSE__'
 docker compose ps --format json 2>&1 || true
 printf '%s\n' '__API__'
-curl -fsS --max-time 5 http://127.0.0.1:8000/v1/ops/status 2>&1 || true
+docker compose exec -T api python - <<'PY'
+import os
+import urllib.request
+
+request = urllib.request.Request(
+    "http://127.0.0.1:8000/v1/ops/status",
+    headers={"Authorization": "Bearer " + os.environ.get("API_TOKEN", "")},
+)
+try:
+    with urllib.request.urlopen(request, timeout=5) as response:
+        print(response.read().decode())
+except Exception:
+    print("API status request failed; check API_TOKEN and service health")
+PY
 '''
 
 
@@ -143,6 +157,8 @@ def main() -> int:
         help="number of SSH connection attempts",
     )
     args = parser.parse_args()
+    if args.host.startswith("-") or any(char.isspace() for char in args.host):
+        parser.error("--host must be an SSH hostname or alias, not an option")
     if not args.remote_dir.startswith("/"):
         parser.error("--remote-dir must be an absolute path")
     if args.connect_timeout <= 0 or args.ssh_attempts <= 0:
@@ -157,10 +173,7 @@ def main() -> int:
                 "-o",
                 f"ConnectTimeout={args.connect_timeout}",
                 args.host,
-                "sh",
-                "-s",
-                "--",
-                args.remote_dir,
+                shlex.join(["sh", "-s", "--", args.remote_dir]),
             ],
             input=REMOTE_SCRIPT,
             text=True,

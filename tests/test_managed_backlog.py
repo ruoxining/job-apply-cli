@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import sessionmaker
 
-from job_apply_agent.config import Settings
+from job_apply_agent.config import LIVE_SUBMIT_ACK, Settings
 from job_apply_agent.domain.enums import ApplicationState
 from job_apply_agent.managed_backlog import (
     BASE_RETRY_SECONDS,
@@ -45,7 +45,7 @@ class FakeRedis:
 
 
 def configured_settings() -> Settings:
-    return Settings(allow_live_submit=True, redis_url="redis://unused")
+    return Settings(allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK, redis_url="redis://unused")
 
 
 def test_explicit_canary_scope_never_sweeps_other_jobs(session):

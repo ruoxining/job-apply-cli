@@ -74,8 +74,9 @@ def start_managed_backlog(
     session_factory=None,
 ) -> BacklogStartResult:
     settings = settings or get_settings()
-    if not settings.allow_live_submit:
-        raise ManagedApplicationError("ALLOW_LIVE_SUBMIT=false; managed backlog is disabled")
+    live_error = settings.live_submission_error()
+    if live_error:
+        raise ManagedApplicationError(live_error)
     client = redis_client or redis.Redis.from_url(settings.redis_url)
     existing = _read_state(client)
     if existing and existing.get("status") == "active":

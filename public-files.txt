@@ -27,9 +27,11 @@ docs/en/development.md
 docs/en/onboarding.md
 docs/en/operations.md
 docs/en/project-structure.md
+docs/en/security-review.md
 docs/onboarding.md
 docs/operations.md
 docs/project-structure.md
+docs/security-review.md
 public-files.txt
 pyproject.toml
 scripts/check_job_sources.py
@@ -150,6 +152,7 @@ tests/test_resumes.py
 tests/test_review_actions.py
 tests/test_scheduler.py
 tests/test_server_status_script.py
+tests/test_submission_safety.py
 tests/test_task_filters.py
 tests/test_telegram_actions.py
 tests/test_telegram_experiences.py

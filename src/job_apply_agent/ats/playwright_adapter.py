@@ -200,8 +200,9 @@ class PlaywrightATSAdapter(ATSAdapter):
         return issues
 
     async def submit(self, page: Any, claim: SubmissionClaim) -> ApplicationResult:
-        if not self.settings.allow_live_submit:
-            raise PermissionError("live submit is disabled; set ALLOW_LIVE_SUBMIT=true explicitly")
+        live_error = self.settings.live_submission_error()
+        if live_error:
+            raise PermissionError(live_error)
         blocker = await self._detect_blocker(page)
         if blocker:
             raise ATSBlocked(*blocker)
@@ -336,8 +337,9 @@ class LeverAdapter(PlaywrightATSAdapter):
     """
 
     async def submit(self, page: Any, claim: SubmissionClaim) -> ApplicationResult:
-        if not self.settings.allow_live_submit:
-            raise PermissionError("live submit is disabled; set ALLOW_LIVE_SUBMIT=true explicitly")
+        live_error = self.settings.live_submission_error()
+        if live_error:
+            raise PermissionError(live_error)
         blocker = await self._detect_blocker(page)
         if blocker:
             raise ATSBlocked(*blocker)

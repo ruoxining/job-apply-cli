@@ -1,9 +1,21 @@
 from datetime import date, datetime, timezone
 
 from fastapi.testclient import TestClient
+import pytest
 
-from job_apply_agent.api import app, get_dispatcher, get_session
+from job_apply_agent.api import app, get_dispatcher, get_session, get_settings
 from job_apply_agent.models import JobPostingRecord
+
+API_TOKEN = "test-only-api-token-with-at-least-32-characters"
+
+
+@pytest.fixture(autouse=True)
+def configured_api_token(monkeypatch):
+    monkeypatch.setenv("API_TOKEN", API_TOKEN)
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+    app.dependency_overrides.clear()
 
 
 def seed_job(
@@ -31,7 +43,7 @@ def client_for(session):
     def override_session():
         yield session
     app.dependency_overrides[get_session] = override_session
-    return TestClient(app)
+    return TestClient(app, headers={"Authorization": f"Bearer {API_TOKEN}"})
 
 
 def test_quota_endpoint_derives_consumption_from_jobs(session):
@@ -111,7 +123,7 @@ def test_run_collections_uses_the_configured_private_policy(session, tmp_path, m
     app.dependency_overrides[get_session] = lambda: iter([session])
     app.dependency_overrides[get_dispatcher] = lambda: fake_dispatcher
     try:
-        response = TestClient(app).post(
+        response = TestClient(app, headers={"Authorization": f"Bearer {API_TOKEN}"}).post(
             "/v1/collections/run",
             json={"boards": [{"ats": "greenhouse", "board_slug": "acme"}]},
         )
@@ -120,3 +132,37 @@ def test_run_collections_uses_the_configured_private_policy(session, tmp_path, m
     assert response.status_code == 200
     assert captured["policy"]["version"] == 7
     assert captured["policy"]["excluded_keywords"] == ["unwanted-role"]
+
+
+@pytest.mark.parametrize("path", ["/v1/jobs", "/v1/applications", "/v1/ops/status"])
+@pytest.mark.parametrize("authorization", [None, "Bearer wrong-token", "Basic wrong-token"])
+def test_private_reads_require_authentication_before_database_access(path, authorization):
+    def forbidden_session():
+        pytest.fail("unauthenticated request reached the database")
+
+    app.dependency_overrides[get_session] = forbidden_session
+    headers = {"Authorization": authorization} if authorization else {}
+    response = TestClient(app).get(path, headers=headers)
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
+def test_unauthenticated_collection_cannot_dispatch():
+    def forbidden():
+        pytest.fail("unauthenticated request reached a side effect")
+
+    app.dependency_overrides[get_session] = forbidden
+    app.dependency_overrides[get_dispatcher] = forbidden
+    response = TestClient(app).post("/v1/collections/run", json={})
+    assert response.status_code == 401
+
+
+@pytest.mark.parametrize("token", ["", "short"])
+def test_unconfigured_api_fails_closed_but_health_remains_available(monkeypatch, token):
+    monkeypatch.setenv("API_TOKEN", token)
+    get_settings.cache_clear()
+    client = TestClient(app)
+    assert client.get("/health").status_code == 200
+    assert client.get("/v1/jobs").status_code == 503
+    if token:
+        assert token not in client.get("/v1/jobs").text

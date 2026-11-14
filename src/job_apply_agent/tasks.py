@@ -286,12 +286,16 @@ async def _run_application(application_id: str, idempotency_key: str) -> str:
             raise ValueError(f"application cannot run from state {job.application_state}")
         if not job.resume_sha256 or not (job.resume_pdf_path or job.resume_docx_path):
             raise ValueError("application has no locked resume artifact")
-        if not settings.allow_live_submit:
+        live_error = settings.live_submission_error()
+        if live_error:
             job.application_state = ApplicationState.NEEDS_HUMAN.value
             job.submission_status = RunStatus.NEEDS_HUMAN.value
             job.blocker = {
-                "kind": "live_submit_disabled",
-                "detail": "ALLOW_LIVE_SUBMIT=false; no browser submission was started",
+                "kind": (
+                    "live_submit_disabled" if not settings.allow_live_submit
+                    else "live_submit_unacknowledged"
+                ),
+                "detail": live_error,
             }
             session.commit()
             return RunStatus.NEEDS_HUMAN.value

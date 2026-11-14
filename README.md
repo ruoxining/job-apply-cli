@@ -30,6 +30,9 @@ uv run job-apply-agent serve
 
 模板含有待替换标记，首次检查失败是预期行为。默认 SQLite 数据库、经历、浏览器状态和
 输出都放在被 Git 排除的 `private/` 中。API 默认只监听 `127.0.0.1:8000`。
+调用 API 前，在 `.env` 设置随机生成、至少 32 字符的 `API_TOKEN`；请求携带
+`Authorization: Bearer <token>`。未配置时业务接口拒绝请求，`/health` 仍可用于探活。
+生成方法见首次使用指引。协作前请阅读 [安全检查与协作边界](docs/security-review.md)。
 
 ## 首次需要准备什么
 

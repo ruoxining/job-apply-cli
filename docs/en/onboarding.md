@@ -120,6 +120,19 @@ read the configured paths.
 
 ## 6. Enable services as needed
 
+The API uses a Bearer Token dedicated to your local instance. Generate a random value with
+the command below and save it as `API_TOKEN` in the ignored `.env` file. Do not copy it into
+distributed examples or commits:
+
+```bash
+python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
+```
+
+Business endpoints require `Authorization: Bearer <token>`. An absent or shorter-than-32-character
+configured token returns 503; missing or incorrect request credentials return 401. `/health`
+does not require a token. This token grants full API access to the instance, with no per-user
+roles or candidate isolation. Collaborators should use separate test instances and fictional data.
+
 Keep `ALLOW_LIVE_SUBMIT=false` initially. Start Redis only when you need queues. Configure
 a Telegram bot token and the single allowed chat ID only when you need Telegram review or
 notifications. Configure models and browsers separately. See [operations](operations.md)

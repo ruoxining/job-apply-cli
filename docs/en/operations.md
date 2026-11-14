@@ -11,8 +11,10 @@ uv run job-apply-agent serve
 uv run job-apply-agent application-report
 ```
 
-The API binds to loopback by default and currently has no user authentication layer for
-public access. Do not expose it directly to the internet. Queues and scheduling require
+The API binds to loopback by default. Business endpoints require a configured `API_TOKEN`
+and Bearer credentials; `/health` is exempt. This is a shared instance secret, without
+per-user permissions, tenant isolation, TLS, or rate limits. Do not expose it directly to
+the internet. Queues and scheduling require
 Redis; the development Compose configuration provides optional local infrastructure:
 
 ```bash
@@ -28,7 +30,7 @@ do not need PostgreSQL.
 
 The production Compose configuration includes PostgreSQL, Redis, migrations, the API, a
 worker, a scheduler, and the Telegram bot. Set `APP_ENV=production`, a non-default database
-password, and Telegram credentials. The candidate directory defaults to `./private/candidate`
+password, a random `API_TOKEN`, and Telegram credentials. The candidate directory defaults to `./private/candidate`
 and is mounted read-only at `/candidate`; it is not copied into the image. Set `RESUME_FILENAME`
 to the actual attachment filename in that directory. Do not push images containing private
 data to a registry.
@@ -47,12 +49,15 @@ and candidate inputs.
 
 ## Live applications and browsers
 
-Live applications require explicitly setting `ALLOW_LIVE_SUBMIT=true`. Deployment validation
-also requires:
+Live applications require explicitly setting `ALLOW_LIVE_SUBMIT=true`. Deployment validation,
+the worker, managed dispatch entry points, and final submission also require:
 
 ```dotenv
 LIVE_SUBMIT_ACK=I_UNDERSTAND_REAL_APPLICATIONS_WILL_BE_SENT
 ```
+
+Compose passes this acknowledgment into the runtime. An absent or mismatched value stops
+execution before opening an application browser.
 
 First use a small supervised sample to verify fields, attachments, and submission receipts.
 Configure queue and source quotas in `.env`; increasing a quota does not bypass review.
@@ -78,7 +83,9 @@ candidate facts; read [data privacy](data-privacy.md) before enabling them.
 
 ## Telegram and status checks
 
-Telegram accepts only the single configured chat ID. `/jd <url>` adds an individual job;
+Telegram accepts only the single configured chat ID, with no additional user ID authorization.
+Use a private chat with the owner; do not connect a live application bot to a collaboration
+group. `/jd <url>` adds an individual job;
 review buttons enqueue locked application materials, with the default shadow-mode setting
 still enforced. Starting the bot communicates with Telegram and may send resumes.
 
@@ -88,6 +95,8 @@ The remote read-only status script requires an explicit host and path:
 python3 scripts/server_status.py --host YOUR_SSH_ALIAS --remote-dir /srv/job-apply-agent
 ```
 
-It connects to the specified server only when you run it. Use `application-report` locally
+It connects to the specified server only when you run it, then queries status inside the API
+container using its environment token. The token is not passed in SSH arguments.
+Use `application-report` locally
 to review newly confirmed submissions, historical applications, unknown outcomes, and
 exclusions. A database status alone is not an external ATS receipt.

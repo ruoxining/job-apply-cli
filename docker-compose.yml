@@ -47,6 +47,7 @@ services:
     command: ["uvicorn", "job_apply_agent.api:app", "--host", "0.0.0.0", "--port", "8000"]
     environment: &app-env
       APP_ENV: ${APP_ENV:-production}
+      API_TOKEN: ${API_TOKEN:?API_TOKEN must be set}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-jobbot}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-jobbot}
       REDIS_URL: redis://redis:6379/0
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
@@ -54,6 +55,7 @@ services:
       ARTIFACTS_DIR: /data/artifacts
       SUBMIT_CONFIRMATION_TIMEOUT_SECONDS: ${SUBMIT_CONFIRMATION_TIMEOUT_SECONDS:-20}
       ALLOW_LIVE_SUBMIT: ${ALLOW_LIVE_SUBMIT:-false}
+      LIVE_SUBMIT_ACK: ${LIVE_SUBMIT_ACK:-}
       SOURCE_BOARDS_JSON: ${SOURCE_BOARDS_JSON:-[]}
       DAILY_FETCH_LIMIT: ${DAILY_FETCH_LIMIT:-20}
       PROFILE_JSON: ${PROFILE_JSON:-{}}

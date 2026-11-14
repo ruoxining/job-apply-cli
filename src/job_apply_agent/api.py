@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date, datetime, time, timezone
+import secrets
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -20,9 +22,34 @@ from .services.policy import PriorityPolicy
 from .services.quota import DailyQuotaService
 
 
-app = FastAPI(title="Job Apply Agent", version="0.2.0")
 SessionDep = Annotated[Session, Depends(get_session)]
 SettingsDep = Annotated[Any, Depends(get_settings)]
+bearer = HTTPBearer(auto_error=False)
+
+
+def require_api_token(
+    request: Request,
+    settings: SettingsDep,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+) -> None:
+    if request.url.path == "/health":
+        return
+    expected = settings.api_token
+    if not expected or len(expected) < 32:
+        raise HTTPException(status_code=503, detail="API authentication is not configured")
+    if credentials is None or not secrets.compare_digest(
+        credentials.credentials.encode(), expected.encode()
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid API credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+app = FastAPI(
+    title="Job Apply Agent", version="0.2.0", dependencies=[Depends(require_api_token)]
+)
 
 
 class AssessRequest(BaseModel):
@@ -265,7 +292,7 @@ def run_collections(request: CollectionRequest, session: SessionDep, dispatcher:
     try:
         dispatcher(boards, profile, policy)
     except ConnectionError as exc:
-        raise HTTPException(status_code=503, detail=f"queue broker unavailable: {exc}") from exc
+        raise HTTPException(status_code=503, detail="queue broker unavailable") from exc
     return {"dispatched": len(boards), "boards": [board.get("board_slug") for board in boards]}
 
 

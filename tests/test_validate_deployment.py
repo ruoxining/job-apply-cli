@@ -1,6 +1,8 @@
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 SCRIPT = Path(__file__).parents[1] / "scripts" / "validate_deployment.py"
 SPEC = importlib.util.spec_from_file_location("validate_deployment", SCRIPT)
 validate_deployment = importlib.util.module_from_spec(SPEC)
@@ -11,6 +13,7 @@ SPEC.loader.exec_module(validate_deployment)
 def valid_values():
     return {
         "APP_ENV": "production",
+        "API_TOKEN": "test-only-api-token-with-at-least-32-characters",
         "POSTGRES_PASSWORD": "not-a-default-password",
         "ALLOW_LIVE_SUBMIT": "false",
         "TELEGRAM_BOT_TOKEN": "test-token",
@@ -46,6 +49,21 @@ def test_live_submit_requires_and_accepts_explicit_acknowledgement():
     assert any("LIVE_SUBMIT_ACK" in error for error in validate_deployment.validate(values))
     values["LIVE_SUBMIT_ACK"] = "I_UNDERSTAND_REAL_APPLICATIONS_WILL_BE_SENT"
     assert validate_deployment.validate(values) == []
+
+
+@pytest.mark.parametrize("value", ["true", "1", "yes", "on"])
+def test_all_supported_true_values_require_live_ack(value):
+    values = valid_values()
+    values["ALLOW_LIVE_SUBMIT"] = value
+    assert any("LIVE_SUBMIT_ACK" in error for error in validate_deployment.validate(values))
+
+
+def test_api_token_required_without_echoing_it():
+    values = valid_values()
+    values["API_TOKEN"] = "short-test-value"
+    errors = validate_deployment.validate(values)
+    assert any("API_TOKEN" in error for error in errors)
+    assert all("short-test-value" not in error for error in errors)
 
 
 def test_cua_requires_glm_key_and_a_visible_virtual_browser():

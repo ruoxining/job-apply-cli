@@ -1,5 +1,7 @@
 import importlib.util
 from pathlib import Path
+import shlex
+from types import SimpleNamespace
 
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "server_status.py"
@@ -34,3 +36,20 @@ def test_report_explains_missing_deployment(capsys):
 
     assert result == 2
     assert "NOT DEPLOYED" in capsys.readouterr().out
+
+
+def test_remote_path_is_one_quoted_shell_argument(monkeypatch):
+    remote_dir = "/srv/work space/$(unexpected); 'quoted'"
+    captured = {}
+
+    def fake_run(command, **kwargs):
+        captured.update(command=command, script=kwargs["input"])
+        return SimpleNamespace(returncode=0, stdout="__REPOSITORY__\nmissing\n", stderr="")
+
+    monkeypatch.setattr(server_status.sys, "argv", [
+        "server_status.py", "--host", "example-server", "--remote-dir", remote_dir
+    ])
+    monkeypatch.setattr(server_status.subprocess, "run", fake_run)
+    assert server_status.main() == 2
+    assert shlex.split(captured["command"][-1]) == ["sh", "-s", "--", remote_dir]
+    assert 'os.environ.get("API_TOKEN", "")' in captured["script"]

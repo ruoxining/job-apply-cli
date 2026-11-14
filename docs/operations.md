@@ -11,7 +11,8 @@ uv run job-apply-agent serve
 uv run job-apply-agent application-report
 ```
 
-API 默认绑定 loopback，当前没有面向公网的用户认证层。不要直接暴露到公网。
+API 默认绑定 loopback，业务接口要求配置 `API_TOKEN` 并携带 Bearer Token，`/health` 除外。
+这是单实例共享密钥，没有逐人权限、租户隔离、TLS 或限流。不要直接暴露到公网。
 启动队列和调度功能时需要 Redis；可选择本地 Compose 基础设施：
 
 ```bash
@@ -25,7 +26,7 @@ docker compose -f docker-compose.dev.yml up -d
 ## 可选自托管 Compose
 
 生产 Compose 包含 PostgreSQL、Redis、迁移、API、worker、scheduler 和 Telegram bot。
-配置 `APP_ENV=production`、非默认数据库密码和 Telegram 凭证；候选人目录默认是
+配置 `APP_ENV=production`、随机 `API_TOKEN`、非默认数据库密码和 Telegram 凭证；候选人目录默认是
 `./private/candidate`，以只读方式挂载到 `/candidate`，不复制进镜像。
 `RESUME_FILENAME` 设为该目录内的真实附件名。不要将包含私有数据的镜像推送到 registry。
 
@@ -41,11 +42,13 @@ docker compose up -d --build
 
 ## 真实申请和浏览器
 
-真实申请需显式设置 `ALLOW_LIVE_SUBMIT=true`，部署检查还要求：
+真实申请需显式设置 `ALLOW_LIVE_SUBMIT=true`，部署检查及 worker、调度入口、最终提交均要求：
 
 ```dotenv
 LIVE_SUBMIT_ACK=I_UNDERSTAND_REAL_APPLICATIONS_WILL_BE_SENT
 ```
+
+Compose 会将确认值传入运行时。缺少或不匹配时，在打开申请浏览器前停止。
 
 先用监督的小样本核对字段、附件和回执。默认队列额度与来源配额在 `.env` 中配置，不因
 提高额度而跳过审核。`managed-apply <application-id>` 将一条任务交给 worker；
@@ -67,7 +70,8 @@ AT-SPI 环境运行。配置 `BROWSER_CHANNEL=chromium`、`BROWSER_HEADLESS=fals
 
 ## Telegram 与状态检查
 
-Telegram 只接受配置的单一 chat ID。`/jd <url>` 可加入单条岗位；审核按钮将锁定材料
+Telegram 只接受配置的单一 chat ID，但没有额外的用户 ID 授权；使用本人私聊，不要把真实
+投递 bot 接入协作群。`/jd <url>` 可加入单条岗位；审核按钮将锁定材料
 加入队列，默认 shadow 开关仍生效。启动 bot 会产生与 Telegram 的通信，并可能发送简历。
 
 远程只读状态脚本不再预设任何人的主机或路径：
@@ -76,5 +80,6 @@ Telegram 只接受配置的单一 chat ID。`/jd <url>` 可加入单条岗位；
 python3 scripts/server_status.py --host YOUR_SSH_ALIAS --remote-dir /srv/job-apply-agent
 ```
 
-该命令仅在你执行时连接所指定的服务器。`application-report` 可在本地核对新增确认、
+该命令仅在你执行时连接所指定的服务器，在 API 容器内读取环境中的 token 发起状态查询，
+不会把 token 放入 SSH 参数。`application-report` 可在本地核对新增确认、
 历史申请、未知结果和排除项；数据库状态本身不等于外部 ATS 回执。

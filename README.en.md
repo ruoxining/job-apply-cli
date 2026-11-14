@@ -36,6 +36,11 @@ uv run job-apply-agent serve
 Templates contain placeholders, so checks are expected to fail until you fill them in.
 By default, the SQLite database, experience data, browser state, and generated output live
 under `private/`, which Git ignores. The API listens on `127.0.0.1:8000` by default.
+Before calling the API, set a randomly generated `API_TOKEN` of at least 32 characters in
+`.env` and send `Authorization: Bearer <token>`. Business endpoints reject requests when
+authentication is unconfigured; `/health` remains available. See onboarding for token
+generation and the [security review and collaboration limits](docs/en/security-review.md)
+before inviting collaborators.
 
 ## What to prepare
 

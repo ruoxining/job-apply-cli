@@ -28,10 +28,12 @@ def validate(
     errors: list[str] = []
     if values.get("APP_ENV") != "production":
         errors.append("APP_ENV must be production")
+    if len(values.get("API_TOKEN", "")) < 32:
+        errors.append("API_TOKEN must contain at least 32 randomly generated characters")
     password = values.get("POSTGRES_PASSWORD", "")
     if not password or password == "change-me":
         errors.append("POSTGRES_PASSWORD must be set to a non-default value")
-    live_submit = values.get("ALLOW_LIVE_SUBMIT", "false").lower() == "true"
+    live_submit = values.get("ALLOW_LIVE_SUBMIT", "false").lower() in {"true", "1", "yes", "on"}
     if (
         live_submit
         and values.get("LIVE_SUBMIT_ACK") != "I_UNDERSTAND_REAL_APPLICATIONS_WILL_BE_SENT"

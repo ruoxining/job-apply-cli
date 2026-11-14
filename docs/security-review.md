@@ -1,64 +1,71 @@
-# 安全检查与协作边界
+# Security review and collaboration limits
 
-[English](en/security-review.md) | 简体中文
+English | [简体中文](zh-CN/security-review.md)
 
-检查日期：2026-11-13。基线为 `d0953c0`，下列修复与本报告一同提交。
-范围是准备给协作者使用的源码仓库、可达 Git 历史、Python 锁定依赖、本地 API、
-投递入口和部分外部输入处理。没有连接生产服务器、投递真实申请或邀请协作者。
+Review date: 2026-11-13. Baseline: `d0953c0`; the fixes below are committed with this report.
+The scope covers the collaboration source repository, reachable Git history, locked Python
+dependencies, local API, submission entry points, and selected external input handling.
+No production server was contacted, no real application was submitted, and no collaborator
+was invited.
 
-可以用这份仓库开展隔离的代码开发。真实候选人资料、浏览器会话、模型账号和投递 bot
-应继续由所有者单独管理；当前程序不是多用户服务。下面仍有未解决风险，不能把本次
-检查理解为完整渗透测试或无人值守生产认证。
+This repository can support isolated code development. The owner should continue to manage
+real candidate data, browser sessions, model accounts, and application bots separately.
+The application is not a multi-user service. Open risks remain; this review is not a complete
+penetration test or certification for unattended production use.
 
-## 本次已修复
+## Fixed in this review
 
-| 问题 | 原有影响 | 修复与证据 |
+| Issue | Previous impact | Fix and evidence |
 | --- | --- | --- |
-| API 无鉴权 | 能访问监听端口的进程可读取岗位、申请回执或触发采集；loopback 只限制网络暴露 | [API](../src/job_apply_agent/api.py) 的业务路由统一要求 Bearer Token；配置缺失时关闭访问；[测试](../tests/test_api.py) 验证未授权请求无法访问数据库或调度器 |
-| 真实投递确认只在预检脚本执行 | 直接启动 worker 或调用适配器时，单独设置 `ALLOW_LIVE_SUBMIT=true` 就能越过二次确认 | [设置](../src/job_apply_agent/config.py)、worker、managed 入口和最终提交同时检查 `LIVE_SUBMIT_ACK`；Compose 传入确认值；[测试](../tests/test_submission_safety.py) 验证在访问浏览器和提交 claim 前停止 |
-| 网页大小限制执行过晚 | `client.get()` 先读完整响应，2 MB 检查无法限制完整大响应的缓冲 | [采集器](../src/job_apply_agent/collectors/job_link.py) 改为流式读取并提早中止，显式禁用跳转；[测试](../tests/test_job_link.py) 验证大流不会被完整读取、注入客户端的跳转配置不能覆盖规则 |
-| SSH 状态脚本未引用远程路径参数 | 路径中的空格或 shell 字符会被远程 shell 解释 | [脚本](../scripts/server_status.py) 使用 shell 参数引用并拒绝选项形态的主机名；读取 API 容器内的 token，不将其写入 SSH 参数；[测试](../tests/test_server_status_script.py) 覆盖特殊字符路径 |
-| 已知依赖漏洞 | TLS 信任库、遥测解析和测试临时目录分别存在已公布问题 | 锁定版本升级为 `certifi 2026.10.23`、`opentelemetry-api 1.45.2`、`pytest 9.2.0`；为 pytest 兼容性升级 `pytest-asyncio 1.5.0` |
+| Unauthenticated API | Any process able to reach the port could read jobs and application receipts or dispatch collection; loopback only restricted network exposure | All business routes in the [API](../src/job_apply_agent/api.py) require a Bearer Token and fail closed when unconfigured; [tests](../tests/test_api.py) verify rejected requests cannot access the database or dispatcher |
+| Live submission acknowledgment enforced only by preflight | Starting a worker directly or calling an adapter could bypass the acknowledgment with `ALLOW_LIVE_SUBMIT=true` alone | [Settings](../src/job_apply_agent/config.py), the worker, managed entry points, and final submission enforce `LIVE_SUBMIT_ACK`; Compose passes it through; [tests](../tests/test_submission_safety.py) verify rejection before browser access or a submission claim |
+| Late response size check | `client.get()` buffered the whole response before the 2 MB check | The [collector](../src/job_apply_agent/collectors/job_link.py) streams the response, stops early, and explicitly disables redirects; [tests](../tests/test_job_link.py) verify early closure and enforce redirect policy even with a differently configured injected client |
+| Unquoted SSH remote path | Spaces and shell characters in paths could be interpreted by the remote shell | The [script](../scripts/server_status.py) quotes remote arguments and rejects option-shaped hostnames; it reads the API token inside the container instead of passing it in SSH arguments; [tests](../tests/test_server_status_script.py) cover special-character paths |
+| Known dependency advisories | Published issues affected the TLS trust bundle, telemetry parsing, and test temporary directories | Updated the lockfile to `certifi 2026.10.23`, `opentelemetry-api 1.45.2`, and `pytest 9.2.0`; updated `pytest-asyncio` to `1.5.0` for compatibility |
 
-依赖依据：[certifi 公告](https://github.com/advisories/GHSA-6q48-6c7w-9gw2)、
-[OpenTelemetry 公告](https://github.com/advisories/GHSA-mf5v-w3w3-f6cg)、
-[pytest 修复记录](https://docs.pytest.org/en/9.0.x/changelog.html)。这些是依赖版本命中，
-不表示已在本项目中复现所有利用路径。
+Dependency references: [certifi advisory](https://github.com/advisories/GHSA-6q48-6c7w-9gw2),
+[OpenTelemetry advisory](https://github.com/advisories/GHSA-mf5v-w3w3-f6cg), and
+[pytest fix](https://docs.pytest.org/en/9.0.x/changelog.html). These are affected dependency
+versions, not evidence that every exploit path was reproduced in this application.
 
-API 现在要求在各自的 `.env` 中设置随机 `API_TOKEN`，具体步骤见 [首次使用](onboarding.md)。
-它是单实例共享密钥，仍没有逐人权限或数据隔离。依赖更新只有重新同步环境或重建镜像
-后才会应用；本次没有更新任何远程部署。
+API users must now set a random `API_TOKEN` in their own `.env`; see [onboarding](onboarding.md).
+It remains a shared instance secret, without per-user permissions or data isolation.
+Dependency updates take effect only after synchronizing an environment or rebuilding an
+image. No remote deployment was updated during this review.
 
-## 仍需处理
+## Open findings
 
-| 优先级与条件 | 发现及证据 | 建议的下一步 |
+| Priority and exposure condition | Finding and evidence | Next step |
 | --- | --- | --- |
-| 高：读取不可信通用职位 URL | [URL 检查与请求](../src/job_apply_agent/collectors/job_link.py) 分别解析 DNS。受控测试第一次返回公网地址，第二次返回自建 loopback 服务；请求成功到达本机服务。已有私网检查和禁止跳转无法防止这种重绑定 | 将连接固定到已经验证的地址，并保持正确的 Host、TLS SNI 和证书验证；配合网络出口隔离。在完成前不要让通用链接读取器接触包含敏感内网服务的环境 |
-| 高：模型子进程与真实凭证共用环境 | [Codex planner](../src/job_apply_agent/ats/codex_planner.py) 继承进程环境，并在子进程结束后才拒绝 unexpected tools。只读配置与事后检查没有证明文件读取、环境变量读取或数据外传已被隔离 | 在独立用户或容器中运行，最小化环境变量和挂载；增加执行前的工具禁用与对抗测试。此项是代码边界审查，未运行真实模型利用实验 |
-| 高：向协作者开放写权限 | 检查时 `main` 未保护、rulesets 为空、仓库没有 CI 工作流；PR 流程尚不能强制执行 | 在当前套餐支持时启用主分支保护、所有者审核和必需检查；先补 CI，再将其设为合并条件。未在本次检查中变更 GitHub 管理设置或邀请任何人 |
-| 中：Telegram 被配置为群聊 | [回调与命令](../src/job_apply_agent/telegram/review.py) 以及 [经历编辑](../src/job_apply_agent/telegram/experiences.py) 仅检查 chat ID，不检查发起人的 user ID；群内其他成员会共享操作权限 | 当前只使用所有者私聊；若要协作群，需要明确用户允许列表和逐人授权测试 |
+| High: untrusted generic job URLs | [URL validation and fetching](../src/job_apply_agent/collectors/job_link.py) resolve DNS separately. In a controlled test, the first lookup returned a public address and the second returned an owned loopback service; the request reached that service. Private-address checks and disabled redirects do not prevent this rebinding | Pin connections to validated addresses while preserving Host, TLS SNI, and certificate checks, with network egress isolation. Until then, keep generic URL fetching away from environments containing sensitive internal services |
+| High: model subprocesses sharing real credentials | The [Codex planner](../src/job_apply_agent/ats/codex_planner.py) inherits the process environment and rejects unexpected tools only after the child exits. Read-only configuration and retrospective detection do not establish isolation of file reads, environment access, or data egress | Use a separate user or container, minimal environment variables and mounts, tool restrictions applied before execution, and adversarial tests. This finding is based on code review; no real-model exploit was attempted |
+| High: granting collaborator write access | At review time, `main` was unprotected, rulesets were empty, and no CI workflow existed; the PR workflow was not enforced | Where the account plan supports it, enable main-branch protection, owner review, and required checks. Add CI before requiring its status for merging. No GitHub administrative settings or invitations were changed in this review |
+| Medium: Telegram configured for a group | [Callbacks and commands](../src/job_apply_agent/telegram/review.py) and [experience editing](../src/job_apply_agent/telegram/experiences.py) check chat ID, not the acting user ID; other group members share those privileges | Use only the owner's private chat for now. Group collaboration requires an explicit user allowlist and per-user authorization tests |
 
-DNS 防护应同时考虑应用和网络出口，参见 [OWASP SSRF 指南](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)。
-个人账号下私有仓库的 collaborator 权限是写权限，不能把邀请理解成只读分享；参见
-[GitHub 权限说明](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/permission-levels-for-a-personal-account-repository)。
-私有仓库的分支保护还受套餐限制，参见 [GitHub 分支保护说明](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches)。
+DNS defenses should cover both application and network egress controls; see the
+[OWASP SSRF guide](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html).
+Private repositories owned by personal accounts give collaborators write access; an invitation
+is not read-only sharing. See [GitHub's permission reference](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/permission-levels-for-a-personal-account-repository).
+Private-repository branch protection also depends on the account plan; see
+[GitHub's branch protection documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches).
 
-此外，API 没有 TLS、限流或多租户隔离；浏览器可能加载跨域资源，当前未完成网络出口
-审计。流式 HTML 检查也不等于对压缩炸弹、慢速响应和所有 ATS JSON 响应设置了完整资源
-配额。继续保持 API 绑定 loopback，不共用真实运行实例。
+The API also lacks TLS, rate limits, and tenant isolation. Browsers can load cross-origin
+resources, and network egress has not been fully audited. Streaming HTML checks do not provide
+complete resource budgets for decompression bombs, slow responses, or every ATS JSON response.
+Keep the API on loopback and avoid sharing an instance containing real data.
 
-## 协作方式
+## Collaboration workflow
 
-1. 只克隆这份干净源码仓库。不要传递原始工作区、旧 Git 历史、`private/`、`.env`、数据库、截图或浏览器 profile。
-2. 每位协作者创建独立测试目录、虚构候选人资料和自己的 API token，保持 `ALLOW_LIVE_SUBMIT=false`、`CUA_ENABLED=false`，不配置生产 bot 或模型凭证。
-3. 通过功能分支和 PR 交付。涉及投递开关、claim、事实与答案来源、上传文件、网络访问和权限的改动由所有者审核。
-4. 不把生产凭证放进 CI，也不在带真实资料的环境执行未审核的分支。暂不把真实投递操作委托给共享实例。
+1. Clone only the clean source repository. Do not share the original workspace, old Git history, `private/`, `.env`, databases, screenshots, or browser profiles.
+2. Each collaborator uses a separate test directory, fictional candidate data, and their own API token. Keep `ALLOW_LIVE_SUBMIT=false` and `CUA_ENABLED=false`, without production bot or model credentials.
+3. Deliver work through feature branches and pull requests. The owner reviews changes to submission controls, claims, fact and answer provenance, uploads, network access, and permissions.
+4. Keep production credentials out of CI and do not run unreviewed branches in environments containing real data. Do not delegate live submissions through a shared instance yet.
 
-## 验证记录与限制
+## Verification and limits
 
-- 对基线两个可达提交的 306 个文件版本执行导出白名单和隐私扫描，使用 11 个本地私有标记，未命中规则。扫描不证明不存在所有间接身份线索；GitHub 账号和提交署名仍是仓库元数据。
-- GitHub 只读检查确认仓库为 private，repository Actions secrets 数量为 0，默认 workflow token 为 read，不能批准 PR。未检查组织级或环境级凭证、外部系统和原始私有仓库。
-- `uv run pytest --tb=short --disable-warnings`：359 项通过，275 条弃用等警告；覆盖应用回归与新增安全边界。
-- `uv export --frozen --no-dev --all-extras --no-emit-project --no-hashes` 后使用 `pip-audit --no-deps --disable-pip` 检查当前平台的 80 个锁定包，升级后无已知公告命中、无跳过。基线三个不同公告中有重复数据库记录，未重复计数。
-- DNS 重绑定复现只访问自建的本地 HTTP fixture，没有访问外部或生产内网资源。
-- 未进行完整生产部署、容器操作系统漏洞扫描、私有 CLI/LCU 运行时审计或真实模型对抗测试。
+- Scanned 306 file versions across the baseline's two reachable commits against the export allowlist and 11 local private markers, with no rule matches. This does not rule out every indirect identifying detail; GitHub account and commit attribution remain repository metadata.
+- Read-only GitHub checks confirmed private visibility, zero repository Actions secrets, a read-only default workflow token, and no workflow permission to approve PRs. Organization or environment secrets, external systems, and the original private repository were not audited.
+- `uv run pytest --tb=short --disable-warnings`: 359 tests passed with 275 warnings, including deprecations; covers regressions and the added security boundaries.
+- Exported all extras with `uv export --frozen --no-dev --all-extras --no-emit-project --no-hashes`, then used `pip-audit --no-deps --disable-pip` on 80 locked packages applicable to the current platform. After upgrades, no known advisories matched and no packages were skipped. Duplicate database records were not counted as separate issues among the baseline's three distinct advisories.
+- The DNS rebinding reproduction contacted only an owned local HTTP fixture, with no external or production internal targets.
+- No full production deployment, container OS vulnerability scan, private CLI/LCU runtime audit, or real-model adversarial test was performed.

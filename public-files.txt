@@ -22,6 +22,7 @@ Dockerfile
 LICENSE
 README.en.md
 README.md
+README.zh-CN.md
 alembic.ini
 alembic/env.py
 alembic/script.py.mako
@@ -49,6 +50,12 @@ docs/operations.md
 docs/project-structure.md
 docs/review-policy.md
 docs/security-review.md
+docs/zh-CN/data-privacy.md
+docs/zh-CN/development.md
+docs/zh-CN/onboarding.md
+docs/zh-CN/operations.md
+docs/zh-CN/project-structure.md
+docs/zh-CN/security-review.md
 public-files.txt
 pyproject.toml
 release-please-config.json

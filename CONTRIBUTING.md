@@ -31,7 +31,7 @@ Do not use administrative bypasses. The second contributor must be added to CODE
 before they can approve owner-authored changes; this setup does not invite collaborators.
 
 See [review policy](docs/review-policy.md), [automation setup](docs/automation.md),
-[development](docs/en/development.md) and [security review](docs/en/security-review.md).
+[development](docs/development.md) and [security review](docs/security-review.md).
 Report security issues privately to the repository owner without posting secrets or personal
 data. Use the issue template for bugs with synthetic reproduction inputs.
 

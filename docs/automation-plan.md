@@ -1,6 +1,6 @@
 # Review and release automation: accepted plan and verification
 
-Target: [ruoxining/job-apply-cli](https://github.com/ruoxining/job-apply-cli), kept private.
+Target: [ruoxining/job-apply-cli](https://github.com/ruoxining/job-apply-cli), initially staged privately.
 The owner approved the shared conversation's CI, PR-Agent and release-please plan, selected
 existing GLM credentials, enabled PyPI, and deferred adding the second contributor.
 Personal runtime data and the original private application repository remain separate.
@@ -64,14 +64,14 @@ observations rather than freezing a particular PR head as permanently approved.
   human CODEOWNER before they can satisfy review requirements; no bypass is configured.
 - Claude credentials are optional and not configured. Its entry point is installed but has
   not been exercised against the live Claude service.
-- GitHub rejected native secret scanning/push protection for this private repository.
-  Gitleaks runs in CI; CodeQL remains prepared but disabled because access is unavailable.
+- During private staging, GitHub rejected native secret scanning/push protection, and CodeQL
+  was disabled. Gitleaks runs in CI. Check current repository settings after visibility changes.
 - Reviewdog and automated low-risk dependency approval remain deferred. No collaborators
   were invited and no real job application was submitted by this configuration work.
 
 ## 中文验收说明
 
-协作仓库统一命名为 `job-apply-cli`，保持 private。已实现 CI、三系统同包安装验证、GLM PR-Agent
+协作仓库统一命名为 `job-apply-cli`，最初以 private 完成配置。已实现 CI、三系统同包安装验证、GLM PR-Agent
 审核、按需 Claude 补丁入口、release-please、PyPI OIDC、Dependabot 和双语贡献文档。
 主分支规则由初始化脚本应用并回读核对：必须走 PR、通过当前 CI、获得人工 CODEOWNER 批准；
 新提交使旧批准失效，不设置绕过权限。实时状态以 GitHub 设置和运行记录为准。
@@ -82,5 +82,5 @@ PyPI 已确认保存项目 `job-apply-cli`、仓库 `ruoxining/job-apply-cli`、
 环境 `pypi` 的可信发布绑定。后续提交会重新触发检查与审核，历史成功不代表新提交已通过。
 
 首次发布仍由人工决定是否合并发布 PR。第二位贡献者暂不添加；Claude 仅配置入口，尚缺可选凭据。
-当前私有仓库不能开启 GitHub 原生 secret scanning/push protection，使用 CI 中的 Gitleaks；
-CodeQL 暂未启用。reviewdog 和低风险自动批准继续延期。未邀请协作者，也未执行实际岗位投递。
+私有配置阶段不能开启 GitHub 原生 secret scanning/push protection，CodeQL 当时未启用；
+CI 使用 Gitleaks。可见性变更后以实时仓库设置为准。reviewdog 和低风险自动批准继续延期。未邀请协作者，也未执行实际岗位投递。

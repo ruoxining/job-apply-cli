@@ -1,49 +1,58 @@
-# 数据保存与发布边界
+# Data storage and publishing
 
-[English](en/data-privacy.md) | 简体中文
+English | [简体中文](zh-CN/data-privacy.md)
 
-## 本地与外部数据流
+## Local and external data flows
 
-| 操作 | 数据去向 |
+| Operation | Data destination |
 | --- | --- |
-| 初始化、资料检查、答案导入、结果统计 | 配置的本地文件和数据库；这些命令不请求外部服务 |
-| 公开职位采集 | ATS 收到普通职位查询请求 |
-| Telegram 审核和通知（启用时） | Telegram 接收职位信息、审核附件及结果 |
-| 模型规划或经历推理（启用时） | 配置的模型服务可能接收页面文本、JD、相关候选人事实和答案 |
-| 填写或上传真实申请 | 对应雇主/ATS 接收填写内容和附件；填写本身可能已传输数据 |
+| Initialization, input checks, answer import, and result reports | Configured local files and database; these commands do not call external services |
+| Public job collection | ATS providers receive ordinary job queries |
+| Telegram review and notifications, when enabled | Telegram receives job information, review attachments, and results |
+| Model planning or experience reasoning, when enabled | The configured model service may receive page text, job descriptions, relevant candidate facts, and answers |
+| Filling out or uploading a real application | The employer or ATS receives entered information and attachments; entering fields may already transmit data |
 
-`ALLOW_LIVE_SUBMIT=false` 会阻止 worker 启动真实申请浏览器，但不是整个系统的断网开关。
-不要把“代码开源”和“个人资料公开”混为一件事，也不要把“本地编排”理解为所有处理均在本地。
+`ALLOW_LIVE_SUBMIT=false` prevents the worker from opening a live application browser. It is
+not a network kill switch for the whole system. Publishing the code does not require publishing
+personal data, and local orchestration does not mean that all processing stays local.
 
-## 私有内容
+## Private content
 
-个人简历仓库、源文件、导出件、经历、联系方式、资格、答案、求职偏好、投递记录、回执、
-截图、模型日志、数据库、浏览器会话和凭证都应留在 `private/` 或其他私有目录。根目录
-`.env` 也被忽略。Git ignore 不能抹去已经提交的旧内容。
+Keep personal resume repositories, source files, exported resumes, experience, contact details,
+qualifications, answers, job preferences, application records, receipts, screenshots, model
+logs, databases, browser sessions, and credentials in `private/` or another private directory.
+The root `.env` is also ignored. Git ignore rules do not remove previously committed content.
 
-`private/` 被 Git、Docker 构建上下文和公开导出排除。Python 分发只包含明确允许的源代码
-和项目文件。导出清单不允许私有路径、数据库、简历文件或符号链接。示例只包含待填写
-标记和虚构内容；不要把真实资料写回 `src/job_apply_agent/examples/`。
+`private/` is excluded from Git, the Docker build context, and source exports. Python
+distributions include only explicitly allowed source and project files. The export manifest
+rejects private paths, databases, resume files, and symbolic links. Examples contain only
+placeholders and fictional content; do not write real data into `src/job_apply_agent/examples/`.
 
-个人 resume 可以是完全独立的私有 Git 仓库。只通过文件路径使用导出的 PDF/DOCX 与
-经历 JSON，不需要 Git 子模块、远程同步或源码中的个人账号地址。
+A personal resume can live in a completely independent private Git repository. Use its
+exported PDF/DOCX and experience JSON through file paths. No Git submodule, remote
+synchronization, or personal account URL in the source is needed.
 
-## 分享前的本地导出
+## Export locally before sharing
 
 ```bash
 python3 scripts/export_public.py --check
 python3 scripts/export_public.py --output ../job-apply-agent-public
 ```
 
-脚本按 `public-files.txt` 复制文件，拒绝覆盖已有目录，不包含 `.git`、私有数据或远程配置，
-也不执行提交、推送或上传。检查包括明显凭证格式、非示例邮箱、个人主目录和可选私有
-字符串清单。可在 `private/open-source-prep/privacy-markers.json` 放一个本地字符串数组，
-或显式传入 `--markers`；输出仅报告文件、行号和规则，不打印匹配内容。
+The script copies files listed in `public-files.txt`, refuses to overwrite an existing directory,
+and excludes `.git`, private data, and remote configuration. It does not commit, push, or upload.
+Checks cover recognizable credential formats, non-example email addresses, personal home
+directories, and an optional list of private strings. Put a local JSON array of strings in
+`private/open-source-prep/privacy-markers.json`, or supply `--markers` explicitly. Output reports
+only the file, line, and rule; it does not print matched content.
 
-自动扫描覆盖已定义的规则，不能识别所有形式的个人经历或间接身份线索。发布前仍需
-人工阅读清单、源码和文档。新增公开文件须经过检查后加入清单。原始仓库的旧提交可能
-包含个人资料，当前工作树脱敏不能证明历史安全；从无历史导出目录另建公开仓库，或
-另行审计并清理全部历史后再考虑发布。
+Automated scans cover defined rules, not every form of personal experience or indirect
+identifying detail. Review the manifest, source, and documentation before publishing. Review
+new public files before adding them to the manifest. Old commits in an original repository
+may contain personal data; cleaning the current working tree does not establish that its
+history is safe. Create a new public repository from an export without history, or separately
+audit and clean the full history before publishing it.
 
-日志和数据库备份也属于私有资料。容器使用者需自行配置私有卷、访问权限和备份位置；
-本项目不会替用户把它们上传到云盘或公开仓库。
+Logs and database backups are private data too. Container users must configure private
+volumes, access controls, and backup locations. This project does not upload them to cloud
+storage or public repositories on the user's behalf.

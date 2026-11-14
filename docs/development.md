@@ -1,10 +1,11 @@
-# 开发与验证
+# Development and validation
 
-[English](en/development.md) | 简体中文
+English | [简体中文](zh-CN/development.md)
 
-协作者使用独立 checkout、虚构资料和自己的 `.env`，保持 `ALLOW_LIVE_SUBMIT=false`，
-通过分支和 PR 交付。合并前运行下列检查；已有风险和未完成的仓库保护见
-[安全检查与协作边界](security-review.md)。
+Collaborators should use separate checkouts, fictional data, and their own `.env`, keep
+`ALLOW_LIVE_SUBMIT=false`, and deliver changes through branches and pull requests. Run the
+checks below before merging. See the [security review and collaboration limits](security-review.md)
+for known risks and repository protections that still need to be configured.
 
 ```bash
 uv sync --frozen --extra test --extra browser
@@ -12,26 +13,31 @@ uv run playwright install chromium
 uv run pytest
 ```
 
-浏览器 fixture 测试需要 browser extra 与 Playwright Chromium。没有这些依赖时，应明确
-区分跳过、环境失败和逻辑失败。测试使用虚构身份与本地 fixture；不要把真实申请数据
-复制到测试目录。
+Browser fixture tests require the `browser` extra and Playwright Chromium. When dependencies
+are missing, distinguish skipped tests, environment failures, and logic failures. Tests use
+fictional identities and local fixtures; do not copy real application data into the test directory.
 
-新增功能先检查现有模块，保留提交 claim、未知结果不重投、答案地区/有效期范围和事实
-来源约束。更改迁移时保留已有版本链。个人化模型提示或实验数据留在私有文件中。
+Before adding functionality, inspect existing modules. Preserve submission claims, the rule
+against resubmitting unknown outcomes, answer region and expiration scopes, and fact provenance
+constraints. Keep the existing version chain when changing migrations. Personal model prompts
+and experimental data belong in private files.
 
-公开范围由 `public-files.txt` 管理。增加文件后更新清单，再运行：
+`public-files.txt` defines the export scope. Update it when adding files, then run:
 
 ```bash
 python3 scripts/export_public.py --check
 python3 scripts/export_public.py --output ../job-apply-agent-public
 ```
 
-导出目录不得预先存在。检查脚本不执行 Git push，也不审计原始仓库的全部历史。
-构建分发包时检查归档内容，确认只包含清单内源码和正常生成的包元数据。
+The output directory must not already exist. The check script does not run Git push or audit
+the original repository's full history. When building distributions, inspect archive contents
+to confirm that they contain only allowed source files and normal generated package metadata.
 
-保留的实验辅助包括合成浏览器 fixture 和接收显式输入的经历回放器。它们不是生产部署
-前提；固定某台私人主机、历史输入路径或旧镜像的脚本已从公开入口移除。
+Retained experimental tools include synthetic browser fixtures and an experience replay tool
+that accepts explicit inputs. They are not production deployment prerequisites. Scripts tied
+to a private host, historical input paths, or old images have been removed from public entry points.
 
-尚未完成的产品工作：未知问题的完整用户交互、长期无人值守可靠性、队列故障恢复、
-更完整的来源健康统计、邮箱接入、通用 HTML 解析和独立的匹配质量评估。不要用本地
-单元测试替代这些尚未完成的集成验证。
+Unfinished product work includes complete interaction for unknown questions, long-term
+unattended reliability, queue failure recovery, fuller source health metrics, email integration,
+generic HTML parsing, and independent matching quality evaluation. Local unit tests do not
+replace these outstanding integration checks.

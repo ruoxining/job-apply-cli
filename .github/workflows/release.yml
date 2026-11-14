@@ -48,13 +48,13 @@ jobs:
         run: |
           branch=$(jq -er .headBranchName <<< "$RELEASE_PR")
           pr=$(jq -er .number <<< "$RELEASE_PR")
-          sha=$(gh api "repos/$REPOSITORY/pulls/$pr" --jq .head.sha)
-          runs="repos/$REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$sha&event=workflow_dispatch&per_page=1"
+          runs="repos/$REPOSITORY/actions/workflows/ci.yml/runs?branch=$branch&event=workflow_dispatch&per_page=1"
           previous=$(gh api "$runs" --jq '.workflow_runs[0].id // 0')
           gh workflow run ci.yml --repo "$REPOSITORY" --ref "$branch"
           passed=false
           for ((attempt = 0; attempt < 90; attempt++)); do
-            read -r run_id status conclusion <<< "$(gh api "$runs" --jq '.workflow_runs[0] | [(.id // 0), (.status // "missing"), (.conclusion // "pending")] | @tsv')"
+            read -r run_id status conclusion sha <<< "$(gh api "$runs" --jq '.workflow_runs[0] | [(.id // 0), (.status // "missing"), (.conclusion // "pending"), (.head_sha // "missing")] | @tsv')"
+            printf 'CI attempt %s: run=%s status=%s conclusion=%s commit=%s\n' "$attempt" "$run_id" "$status" "$conclusion" "$sha"
             if [ "$run_id" -gt "$previous" ] && [ "$status" = completed ]; then
               test "$conclusion" = success
               passed=true

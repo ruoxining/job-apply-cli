@@ -1,5 +1,7 @@
 # 开发与验证
 
+[English](en/development.md) | 简体中文
+
 ```bash
 uv sync --frozen --extra test --extra browser
 uv run playwright install chromium

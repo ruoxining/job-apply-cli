@@ -1,5 +1,7 @@
 # 运行说明
 
+[English](en/operations.md) | 简体中文
+
 ## 本地开发与 shadow 模式
 
 先完成 [onboarding](onboarding.md)。API 和 SQLite 查询可以单独运行：

@@ -7,6 +7,7 @@
 Dockerfile
 LICENSE
 README.md
+README.en.md
 alembic.ini
 alembic/env.py
 alembic/script.py.mako
@@ -21,6 +22,11 @@ docker-compose.dev.yml
 docker-compose.yml
 docs/data-privacy.md
 docs/development.md
+docs/en/data-privacy.md
+docs/en/development.md
+docs/en/onboarding.md
+docs/en/operations.md
+docs/en/project-structure.md
 docs/onboarding.md
 docs/operations.md
 docs/project-structure.md

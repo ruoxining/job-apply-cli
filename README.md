@@ -1,5 +1,7 @@
 # Job Apply Agent
 
+[English](README.en.md) | 简体中文
+
 个人求职流程的采集、筛选、材料准备和投递编排工具，支持 Greenhouse、Lever、Ashby。
 候选人资料与代码分开保存。默认关闭真实投递，也不自动启用 Telegram 或模型服务。
 

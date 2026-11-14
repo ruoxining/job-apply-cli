@@ -1,5 +1,7 @@
 # 项目结构与流程
 
+[English](en/project-structure.md) | 简体中文
+
 ```text
 src/job_apply_agent/
   examples/       不含真实身份的初始化模板

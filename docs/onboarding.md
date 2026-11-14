@@ -1,5 +1,7 @@
 # 首次使用
 
+[English](en/onboarding.md) | 简体中文
+
 从 README 的安装命令开始。`onboard init` 会复制代码内的示例到 `private/candidate/`，
 已有文件不会被覆盖。直接编辑本地文件，不需要把简历上传给本项目的作者或某个托管平台。
 本项目目前提供 CLI 和 API，没有文件上传网页或 PDF 自动事实提取器。

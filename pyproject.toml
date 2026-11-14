@@ -44,7 +44,7 @@ packages = ["src/job_apply_agent"]
 [tool.hatch.build.targets.sdist]
 include = [
   "/src", "/tests", "/scripts", "/docs", "/alembic",
-  "/README.md", "/LICENSE", "/pyproject.toml", "/uv.lock", "/alembic.ini",
+  "/README.md", "/README.en.md", "/LICENSE", "/pyproject.toml", "/uv.lock", "/alembic.ini",
   "/Dockerfile", "/docker-compose.yml", "/docker-compose.dev.yml",
   "/.env.example", "/.gitignore", "/.dockerignore", "/public-files.txt",
 ]

@@ -90,7 +90,14 @@ def latest_ci_passed(api: GitHub, sha: str) -> bool:
     runs = api.request(f"actions/workflows/ci.yml/runs?head_sha={sha}&per_page=100")[
         "workflow_runs"
     ]
-    eligible = [run for run in runs if run["event"] in {"pull_request", "workflow_dispatch"}]
+    # Bot-created PR events create approval placeholders with no executed jobs.
+    # A successful explicitly dispatched run on the same SHA supplies the real CI result.
+    eligible = [
+        run
+        for run in runs
+        if run["event"] in {"pull_request", "workflow_dispatch"}
+        and run.get("conclusion") != "action_required"
+    ]
     if not eligible:
         return False
     latest = max(eligible, key=lambda run: (run["id"], run.get("run_attempt", 1)))

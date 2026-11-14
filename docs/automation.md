@@ -21,7 +21,9 @@ CLI against a local synthetic provider. Revalidate the patch when upgrading PR-A
 
 Actions use immutable commit pins. Dependabot updates uv and Actions weekly in groups.
 The release workflow explicitly dispatches CI for the release PR: PRs created with
-`GITHUB_TOKEN` do not otherwise trigger CI. Release packaging is called in the same workflow,
+`GITHUB_TOKEN` create approval-required workflow placeholders. These contain no executed
+jobs and are not CI results; the reviewer uses the latest executed PR/dispatched CI for the
+exact SHA. Failed, cancelled or running checks still block review. Release packaging is called in the same workflow,
 so the bot-created tag does not depend on a second implicit event. The pinned release-please
 TOML updater wraps scalar fields; the uv.lock JSONPath deliberately matches `name.value`.
 CI requires the lockfile, module and distribution versions to stay synchronized.
@@ -114,8 +116,8 @@ Claude 凭据同样放入 `ai-review`，只保留按需入口。当前输出供�
 提交，也不在持有模型凭据的任务里执行 PR 代码。reviewdog 和低风险自动批准后续再考虑。
 
 PyPI 必须由已登录账号在上方网页完成一次可信发布绑定，字段见表。`PYPI_PUBLISH_ENABLED=true`
-启用 OIDC 发布，无需长期 PyPI token。首次上传前名称并未保留。release-please 创建的 PR 不会自动
-触发其他 Actions，因此发布流程显式调度 CI，并在同一流程中调用打包、三系统验证和上传任务。
+启用 OIDC 发布，无需长期 PyPI token。首次上传前名称并未保留。release-please 创建的 PR 会留下等待工作流批准的空记录，因此发布流程显式调度 CI。审核器只按
+同一 SHA 上最近实际执行的 CI 判断；失败、取消或仍运行的检查仍阻止审核。发布流程在同一流程中调用打包、三系统验证和上传任务。
 上传失败要核对真实状态后处理，不能将已创建 tag 当作已成功发布到 PyPI。
 
 ## Sources / 依据
@@ -126,4 +128,5 @@ PyPI 必须由已登录账号在上方网页完成一次可信发布绑定，字
 - [release-please Action](https://github.com/googleapis/release-please-action)
 - [PyPI Trusted Publishers](https://docs.pypi.org/trusted-publishers/)
 - [Dependabot with uv](https://docs.astral.sh/uv/guides/integration/dependabot/)
+- [GitHub token workflow triggers](https://docs.github.com/en/actions/concepts/security/github_token)
 - [GitHub rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets)

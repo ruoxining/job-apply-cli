@@ -123,3 +123,47 @@ def test_ai_posts_only_a_comment_on_verified_commit(monkeypatch):
     assert len(api.posts) == 1
     assert api.posts[0]["event"] == "COMMENT"
     assert api.posts[0]["commit_id"] == "abc"
+
+
+@pytest.mark.parametrize(
+    ("later_result", "expected"),
+    [("action_required", True), ("failure", False), ("cancelled", False), (None, False)],
+)
+def test_unexecuted_approval_placeholder_cannot_hide_real_ci(later_result, expected):
+    class RunsAPI:
+        def request(self, _):
+            return {
+                "workflow_runs": [
+                    {
+                        "id": 10,
+                        "event": "workflow_dispatch",
+                        "status": "completed",
+                        "conclusion": "success",
+                    },
+                    {
+                        "id": 11,
+                        "event": "pull_request",
+                        "status": "in_progress" if later_result is None else "completed",
+                        "conclusion": later_result,
+                    },
+                ]
+            }
+
+    assert review.latest_ci_passed(RunsAPI(), "abc") is expected
+
+
+def test_approval_placeholder_alone_is_not_successful_ci():
+    class RunsAPI:
+        def request(self, _):
+            return {
+                "workflow_runs": [
+                    {
+                        "id": 11,
+                        "event": "pull_request",
+                        "status": "completed",
+                        "conclusion": "action_required",
+                    }
+                ]
+            }
+
+    assert not review.latest_ci_passed(RunsAPI(), "abc")

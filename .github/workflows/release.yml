@@ -17,7 +17,7 @@ jobs:
        github.event.workflow_run.head_branch == 'main' &&
        github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     permissions:
       contents: write
       pull-requests: write
@@ -39,7 +39,7 @@ jobs:
         id: release
         with:
           target-branch: main
-      - name: Explicitly run CI for the bot-created release PR
+      - name: Verify the bot-created release PR, then dispatch advisory review
         if: steps.release.outputs.pr != ''
         env:
           GH_TOKEN: ${{ github.token }}
@@ -47,7 +47,26 @@ jobs:
           RELEASE_PR: ${{ steps.release.outputs.pr }}
         run: |
           branch=$(jq -er .headBranchName <<< "$RELEASE_PR")
+          pr=$(jq -er .number <<< "$RELEASE_PR")
+          sha=$(gh api "repos/$REPOSITORY/pulls/$pr" --jq .head.sha)
+          runs="repos/$REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$sha&event=workflow_dispatch&per_page=1"
+          previous=$(gh api "$runs" --jq '.workflow_runs[0].id // 0')
           gh workflow run ci.yml --repo "$REPOSITORY" --ref "$branch"
+          passed=false
+          for attempt in $(seq 1 90); do
+            read -r run_id status conclusion <<< "$(gh api "$runs" --jq '.workflow_runs[0] | [(.id // 0), (.status // "missing"), (.conclusion // "pending")] | @tsv')"
+            if [ "$run_id" -gt "$previous" ] && [ "$status" = completed ]; then
+              test "$conclusion" = success
+              passed=true
+              break
+            fi
+            sleep 10
+          done
+          test "$passed" = true
+          current=$(gh api "repos/$REPOSITORY/pulls/$pr" --jq .head.sha)
+          test "$current" = "$sha"
+          # Explicit dispatch also works when GitHub suppresses a downstream workflow_run.
+          gh workflow run ai-review.yml --repo "$REPOSITORY" --ref main -f "pr=$pr"
   verify:
     needs: prepare
     if: needs.prepare.outputs.released == 'true'

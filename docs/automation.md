@@ -20,13 +20,15 @@ CI checks dependency compatibility, audits that environment and exercises the re
 CLI against a local synthetic provider. Revalidate the patch when upgrading PR-Agent.
 
 Actions use immutable commit pins. Dependabot updates uv and Actions weekly in groups.
-The release workflow explicitly dispatches CI for the release PR: PRs created with
+The release workflow explicitly dispatches CI for the release PR, waits for that exact run
+to pass, then dispatches advisory review from main: PRs created with
 `GITHUB_TOKEN` create approval-required workflow placeholders. These contain no executed
 jobs and are not CI results; the reviewer uses the latest executed PR/dispatched CI for the
 exact SHA. Failed, cancelled or running checks still block review. Release packaging is called in the same workflow,
 so the bot-created tag does not depend on a second implicit event. The pinned release-please
 TOML updater wraps scalar fields; the uv.lock JSONPath deliberately matches `name.value`.
-CI requires the lockfile, module and distribution versions to stay synchronized.
+CI requires the lockfile, module and distribution versions to stay synchronized. The explicit
+review dispatch also covers GitHub suppressing a downstream workflow_run from bot-started CI.
 
 ## GitHub initialization
 

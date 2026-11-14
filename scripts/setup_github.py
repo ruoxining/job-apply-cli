@@ -207,7 +207,10 @@ def main() -> int:
         assert verified["enforcement"] == "active" and not verified["bypass_actors"]
         actual = {r["type"]: r for r in verified["rules"]}
         for rule in desired_rules()["rules"]:
-            assert actual[rule["type"]] == rule, "Ruleset verification failed"
+            returned = actual[rule["type"]]
+            # GitHub adds default protection parameters; verify every requested value.
+            for name, value in rule.get("parameters", {}).items():
+                assert returned["parameters"][name] == value, "Ruleset verification failed"
         return verified
 
     attempt("main review and current CI rules", rules)

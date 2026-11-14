@@ -1,38 +1,44 @@
-# 首次使用
+# Onboarding
 
-[English](en/onboarding.md) | 简体中文
+English | [简体中文](zh-CN/onboarding.md)
 
-从 README 的安装命令开始。`onboard init` 会复制代码内的示例到 `private/candidate/`，
-已有文件不会被覆盖。直接编辑本地文件，不需要把简历上传给本项目的作者或某个托管平台。
-本项目目前提供 CLI 和 API，没有文件上传网页或 PDF 自动事实提取器。
+Start with the installation commands in the [README](../README.md). `onboard init`
+copies bundled examples into `private/candidate/` without overwriting existing files.
+Edit those local files directly; you do not need to upload your resume to the project author
+or a hosted platform. The project currently provides a CLI and API, with no upload web page
+or automatic extraction of facts from PDFs.
 
-## 1. 放入完整简历
+## 1. Provide a complete resume
 
-把自己审核过的 PDF 或 DOCX 复制到 `private/candidate/`。默认配置是：
+Copy a PDF or DOCX that you have reviewed into `private/candidate/`. The default setting is:
 
 ```dotenv
 RESUME_FILE=private/candidate/resume.pdf
 ```
 
-可以使用其他本地路径。支持 PDF/DOCX，最大 20 MiB。准备申请时复制文件并锁定哈希；
-不会修改原稿或自动润色其中的经历。格式检查不等于事实核验或排版审核。
+You can use another local path. Supported formats are PDF and DOCX, up to 20 MiB. Application
+preparation copies the file and locks its hash; it does not edit the original or rewrite your
+experience. Format checks do not verify factual accuracy or review the layout.
 
-LaTeX 源码、模板工程和个人 resume Git 仓库可以独立放在任意私有位置，只把导出文件路径
-交给主项目。主项目不需要克隆或同步该仓库，也不会把它放入安装包或容器镜像。
+Keep LaTeX sources, template projects, and a personal resume Git repository in any separate
+private location. Give this project only the exported file's path. It does not need to clone
+or synchronize the resume repository, or include it in a package or container image.
 
-## 2. 填写事实和求职范围
+## 2. Enter facts and job preferences
 
-编辑 `profile.json`，替换所有 `REPLACE_` 标记，并逐项确认：
+Edit `profile.json`, replace every `REPLACE_` placeholder, and confirm each item:
 
-- 目标国家、职位类型、职位名称、远程偏好及可接受的工作模式。
-- 实际工作年限、公司/行业经历年限、已掌握的技能。
-- 有工作许可的国家，以及是否需要雇主担保。默认布尔值不是对个人资格的确认。
-- `facts` 中每条经历的稳定 `id`、准确 `statement`、证据 `source`，以及适用的日期、技能和已核实数字。
+- Target countries, job types, job titles, remote preferences, and acceptable work arrangements.
+- Actual years of work experience, company or industry experience, and skills you have.
+- Countries where you are authorized to work and whether you need employer sponsorship. Default Boolean values do not confirm your eligibility.
+- A stable `id`, accurate `statement`, evidence `source`, and applicable dates, skills, and verified numbers for each entry in `facts`.
 
-`source` 可写自己的项目记录或本地资料引用。只添加你能确认的内容；没有证据的业绩、
-雇佣经历、学历或技能不能由模型补齐。`allowed_rewrites` 是你已审核的等价表述列表。
+The `source` can refer to your project records or local supporting material. Include only
+claims you can confirm. Models must not invent achievements, employment, degrees, or skills.
+`allowed_rewrites` lists equivalent wording that you have reviewed.
 
-可选的 `experiences.json` 接收较长的经历。结构如下，示例不代表任何人的真实背景：
+The optional `experiences.json` accepts more detailed experience. Its structure is shown
+below; the example does not represent anyone's actual background:
 
 ```json
 {
@@ -46,13 +52,14 @@ LaTeX 源码、模板工程和个人 resume Git 仓库可以独立放在任意�
 }
 ```
 
-没有详细经历时保留空列表。启用经历推理前还需配置相应模型后端；普通初始化不启用它。
+Leave lists empty when you have no detailed entries. Experience reasoning also requires a
+configured model backend; ordinary initialization does not enable it.
 
-## 3. 填写可复用答案
+## 3. Enter reusable answers
 
-编辑 `answer-bank.json`。至少填写 `first_name`、`last_name`、`email`；建议同时提供
-`full_name`、`phone`、`linkedin_url`、`github_url` 等实际需要且已确认的字段。可删除不适用项。
-每一项使用 `AnswerBankEntry` 结构：
+Edit `answer-bank.json`. At minimum, fill in `first_name`, `last_name`, and `email`. Also
+provide confirmed values such as `full_name`, `phone`, `linkedin_url`, and `github_url` when
+needed. Remove entries that do not apply. Each entry uses the `AnswerBankEntry` structure:
 
 ```json
 {
@@ -64,27 +71,35 @@ LaTeX 源码、模板工程和个人 resume Git 仓库可以独立放在任意�
 }
 ```
 
-上面的答案和有效期都必须按本人实际情况修改；不要直接导入。字段键参考
-`services/answers.py`、`ats/answer_binding.py` 和 `ats/playwright_adapter.py` 的映射。
-选项题仍须与当前页面选项匹配，不会仅凭相似措辞强行选择。
+Replace both the answer and expiration date with values that reflect your situation; do not
+import this example unchanged. For field keys, see the mappings in `services/answers.py`,
+`ats/answer_binding.py`, and `ats/playwright_adapter.py`. Answers to choice questions must
+still match the current page's options; similar wording alone does not justify a selection.
 
-`regions` 为空意味着不限地区；工作许可和担保等应使用明确地区。`valid_until` 为空表示
-没有设置到期日，不能因此假定事实永远不变。薪资、当前公司和可开始时间也应及时更新。
-不提供密码、验证码、政府证件号或银行卡信息；面试录音、转录等授权应保留其公司和问题范围。
+An empty `regions` list means no region restriction. Use explicit regions for work authorization,
+sponsorship, and similar answers. An empty `valid_until` means no expiration date is set; it
+does not imply that the fact will never change. Keep salary expectations, current employer,
+and availability up to date as well. Do not include passwords, verification codes, government
+ID numbers, or payment card details. Consent to interview recording or transcription should
+remain scoped to the relevant company and question.
 
-执行 `onboard import-answers` 才会写入配置的数据库。相同键和地区范围会更新；不同范围
-分别保存。模板标记、过期项和重复范围会被拒绝，错误输出不打印个人答案。
+Only `onboard import-answers` writes these entries to the configured database. An existing
+entry with the same key and region scope is updated; different scopes are stored separately.
+Placeholders, expired entries, and duplicate scopes are rejected. Error output does not print
+personal answers.
 
-## 4. 配置采集与筛选
+## 4. Configure collection and filtering
 
-`source-boards.json` 示例默认 `enabled: false`。从真实公司招聘页找到 ATS 类型和 board slug，
-填写后启用。不要填招聘聚合站的搜索页。每个来源支持 `max_jobs`、`title_keywords` 和
-`location_keywords`；过滤词为空代表不施加该过滤。
+Examples in `source-boards.json` default to `enabled: false`. Find the ATS type and board slug
+on the company's actual careers page, enter them, then enable the source. Do not use a job
+aggregator's search page. Each source supports `max_jobs`, `title_keywords`, and
+`location_keywords`; an empty keyword list leaves that filter unrestricted.
 
-`search-policy.json` 设置公司和职位偏好、排除项、评分权重与人工审核阈值。文件属于用户
-自己的配置。模型或来源网站的文字不能覆盖这些规则。
+Use `search-policy.json` for company and role preferences, exclusions, scoring weights, and
+human review thresholds. These are your rules. Model output and source website text must
+not override them.
 
-## 5. 本地验证并导入
+## 5. Validate locally and import
 
 ```bash
 uv run job-apply-agent onboard check
@@ -93,27 +108,33 @@ uv run job-apply-agent onboard import-answers
 uv run job-apply-agent application-report
 ```
 
-`check` 检查文件、类型、必要输入、模板残留、答案有效期和简历格式，不连接 ATS，也不
-证明每份申请表都已经有答案。`init-db` 面向首次本地开发；已有部署使用 Alembic 迁移。
+`check` validates files, types, required inputs, remaining placeholders, answer expiration,
+and resume format. It does not contact ATS providers or establish that every application form
+has a complete set of answers. `init-db` is for initial local development; existing deployments
+use Alembic migrations.
 
-如需自定义数据目录，可运行 `onboard init --directory /your/private/candidate`，并在 `.env`
-中同步 `PROFILE_PATH`、`ANSWER_BANK_PATH`、`SOURCE_BOARDS_PATH`、`SEARCH_POLICY_PATH`、
-`EXPERIENCE_LIBRARY_PATH`、`RESUME_FILE`。`check` 和 `import-answers` 始终读取配置中的路径。
+To use a custom data directory, run `onboard init --directory /your/private/candidate` and
+update `PROFILE_PATH`, `ANSWER_BANK_PATH`, `SOURCE_BOARDS_PATH`, `SEARCH_POLICY_PATH`,
+`EXPERIENCE_LIBRARY_PATH`, and `RESUME_FILE` in `.env`. `check` and `import-answers` always
+read the configured paths.
 
-## 6. 按需启用服务
+## 6. Enable services as needed
 
-API 使用本地实例专用的 Bearer Token。运行下面命令生成随机值，把结果写入被忽略的
-`.env` 中的 `API_TOKEN`，不要复制到公开示例或提交记录：
+The API uses a Bearer Token dedicated to your local instance. Generate a random value with
+the command below and save it as `API_TOKEN` in the ignored `.env` file. Do not copy it into
+distributed examples or commits:
 
 ```bash
 python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
 ```
 
-业务接口要求 `Authorization: Bearer <token>`；未配置或短于 32 字符时返回 503，
-凭证缺失或错误时返回 401。`/health` 不需要 token。此 token 提供该实例全部 API 权限，
-没有逐人角色或候选人隔离；协作者应使用自己的测试实例和虚构资料。
+Business endpoints require `Authorization: Bearer <token>`. An absent or shorter-than-32-character
+configured token returns 503; missing or incorrect request credentials return 401. `/health`
+does not require a token. This token grants full API access to the instance, with no per-user
+roles or candidate isolation. Collaborators should use separate test instances and fictional data.
 
-先保持 `ALLOW_LIVE_SUBMIT=false`。只有需要队列时才启动 Redis；只有需要 Telegram 审核
-或通知时才配置 bot token 和唯一允许的 chat ID；模型和浏览器也单独配置。
-参见 [运行说明](operations.md) 和 [数据边界](data-privacy.md)。凭证始终放在被忽略的 `.env`
-或部署环境中，不编辑公开示例来保存自己的值。
+Keep `ALLOW_LIVE_SUBMIT=false` initially. Start Redis only when you need queues. Configure
+a Telegram bot token and the single allowed chat ID only when you need Telegram review or
+notifications. Configure models and browsers separately. See [operations](operations.md)
+and [data privacy](data-privacy.md). Keep credentials in the ignored `.env` file or deployment
+environment; do not save real values in the distributed examples.

@@ -1,16 +1,20 @@
 # Job Apply CLI
 
-[English](README.en.md) | 简体中文
+English | [简体中文](README.zh-CN.md)
 
-个人求职流程的采集、筛选、材料准备和投递编排工具，支持 Greenhouse、Lever、Ashby。
-候选人资料与代码分开保存。默认关闭真实投递，也不自动启用 Telegram 或模型服务。
+A tool for collecting and filtering job postings, preparing application materials, and
+coordinating applications through Greenhouse, Lever, and Ashby. Candidate data is stored
+separately from the code. Live submission is disabled by default; Telegram and model
+services are also opt-in.
 
-项目仍处于实验阶段。已有受监督的实际投递经验，但不能据此承诺无人值守运行的可靠性。
-浏览器连接、必填问题和各网站规则仍可能需要人工处理；提交结果不明时保留记录，禁止盲目重投。
+The project is experimental. It has been used for supervised applications, but that does
+not establish reliability for unattended operation. Browser connections, required questions,
+and site-specific rules may still need human attention. When a submission outcome is unclear,
+keep the record and verify the result before retrying.
 
-## 从这里开始
+## Getting started
 
-需要 Python 3.12+ 和 uv。无需个人 resume 仓库或 Git 子模块。
+Requires Python 3.12+ and uv. No personal resume repository or Git submodule is required.
 
 ```bash
 uv sync --frozen --extra test
@@ -18,8 +22,9 @@ cp .env.example .env
 uv run job-apply-cli onboard init
 ```
 
-初始化只在 `private/candidate/` 创建本地模板，不上传文件、不请求模型、不采集或投递。
-接下来按 [首次使用指引](docs/onboarding.md) 填写资料、放入已审核的 PDF/DOCX，再执行：
+Initialization creates local templates in `private/candidate/`. It does not upload files,
+call models, collect jobs, or submit applications. Follow the [onboarding guide](docs/onboarding.md)
+to enter your information and provide a reviewed PDF or DOCX, then run:
 
 ```bash
 uv run job-apply-cli onboard check
@@ -28,42 +33,46 @@ uv run job-apply-cli onboard import-answers
 uv run job-apply-cli serve
 ```
 
-模板含有待替换标记，首次检查失败是预期行为。默认 SQLite 数据库、经历、浏览器状态和
-输出都放在被 Git 排除的 `private/` 中。API 默认只监听 `127.0.0.1:8000`。
-调用 API 前，在 `.env` 设置随机生成、至少 32 字符的 `API_TOKEN`；请求携带
-`Authorization: Bearer <token>`。未配置时业务接口拒绝请求，`/health` 仍可用于探活。
-生成方法见首次使用指引。协作前请阅读 [安全检查与协作边界](docs/security-review.md)。
+Templates contain placeholders, so checks are expected to fail until you fill them in.
+By default, the SQLite database, experience data, browser state, and generated output live
+under `private/`, which Git ignores. The API listens on `127.0.0.1:8000` by default.
+Before calling the API, set a randomly generated `API_TOKEN` of at least 32 characters in
+`.env` and send `Authorization: Bearer <token>`. Business endpoints reject requests when
+authentication is unconfigured; `/health` remains available. See onboarding for token
+generation and the [security review and collaboration limits](docs/security-review.md)
+before inviting collaborators.
 
-## 首次需要准备什么
+## What to prepare
 
-| 输入 | 本地位置 | 用途 |
+| Input | Local location | Purpose |
 | --- | --- | --- |
-| 已审核的完整简历 | `private/candidate/resume.pdf` 或 `.docx` | 实际申请附件，配置 `RESUME_FILE` |
-| 可核实的经历事实、技能、资格及求职范围 | `private/candidate/profile.json` | 职位筛选和有依据的回答 |
-| 姓名、联系方式、已确认的表单答案 | `private/candidate/answer-bank.json` | 直接填表；按地区和有效期限制复用 |
-| 公司 ATS 来源与搜索条件 | `private/candidate/source-boards.json` | 明确采集范围；示例默认禁用 |
-| 优先级、排除项和审核分流规则 | `private/candidate/search-policy.json` | 可解释排序及人工审核 |
-| 更详细的经历资料（可选） | `private/candidate/experiences.json` | 实验性经历检索及长答案支持 |
-| 服务凭证（按需） | `.env` | PostgreSQL、Telegram、模型等选用服务 |
+| A reviewed, complete resume | `private/candidate/resume.pdf` or `.docx` | Application attachment; set `RESUME_FILE` |
+| Verifiable experience, skills, qualifications, and job preferences | `private/candidate/profile.json` | Job filtering and answers grounded in facts |
+| Name, contact details, and confirmed form answers | `private/candidate/answer-bank.json` | Form completion, with region and expiration limits on reuse |
+| Company ATS sources and search filters | `private/candidate/source-boards.json` | Explicit collection scope; examples are disabled by default |
+| Priorities, exclusions, and review rules | `private/candidate/search-policy.json` | Explainable ranking and human review |
+| Detailed experience data (optional) | `private/candidate/experiences.json` | Experimental experience retrieval and longer answers |
+| Service credentials (as needed) | `.env` | Optional PostgreSQL, Telegram, model, and other services |
 
-完整简历和结构化事实各有用途：不会从上传简历中自动认定所有经历属实，也不会把模型
-生成的内容当作事实。表单提出新的资格或授权问题时，需补充相应证据或明确选择。
+A complete resume and structured facts serve different purposes. Providing a resume does not
+automatically verify every claim in it, and generated text is not treated as fact. New questions
+about qualifications or consent require supporting evidence or an explicit choice.
 
-## 运行方式与边界
+## Operation and limits
 
-- `onboard`、SQLite 初始化及本地检查不需要外部账号。
-- 采集使用公开 ATS 接口；队列、定时任务需要 Redis，部署方案见 [运行说明](docs/operations.md)。
-- `ALLOW_LIVE_SUBMIT=false` 时，worker 在启动申请浏览器前停止。此开关不禁止你单独启用的 Telegram 通知或其他外部服务。
-- 提供 `RESUME_FILE` 时，每个岗位保存文件副本、哈希和有效期。修改源简历不会悄然改变已准备的附件。
-- 没有提供完整简历时，保留从事实生成简版 DOCX 的开发功能；它不是完整个人简历的替代品。
-- 浏览器依赖通过 `uv sync --frozen --extra browser` 单独安装。Driver、Codex、LCU 后端的前提不同，见运行说明。
-- Telegram、模型服务和 ATS 会接收不同范围的个人资料，见 [数据边界](docs/data-privacy.md)。
+- Onboarding, SQLite initialization, and local checks do not require external accounts.
+- Collection uses public applicant tracking system (ATS) APIs. Queues and scheduled jobs require Redis; see [operations](docs/operations.md).
+- With `ALLOW_LIVE_SUBMIT=false`, the worker stops before opening an application browser. This setting does not disable separately enabled Telegram notifications or other external services.
+- With `RESUME_FILE` configured, each job gets an attachment copy, a hash, and an expiration date. Editing the original resume does not silently change a prepared attachment.
+- Without a complete resume, a development composer can generate a simple DOCX from facts. It is not a substitute for a complete personal resume.
+- Install browser dependencies separately with `uv sync --frozen --extra browser`. Driver, Codex, and LCU have different prerequisites; see operations.
+- Telegram, model services, and ATS providers receive different subsets of personal data; see [data privacy](docs/data-privacy.md).
 
-## 开发与文档
+## Development and documentation
 
-[项目结构](docs/project-structure.md) · [首次使用](docs/onboarding.md) ·
-[运行说明](docs/operations.md) · [数据与发布边界](docs/data-privacy.md) ·
-[开发及验证](docs/development.md)
+[Project structure](docs/project-structure.md) · [Onboarding](docs/onboarding.md) ·
+[Operations](docs/operations.md) · [Data privacy and publishing](docs/data-privacy.md) ·
+[Development and validation](docs/development.md)
 
 ```bash
 uv sync --frozen --extra test --extra browser
@@ -72,16 +81,19 @@ uv run pytest
 python3 scripts/export_public.py --check
 ```
 
-公开源文件由 `public-files.txt` 明确列出。发布前生成不含旧 Git 历史的全新本地目录：
+`public-files.txt` explicitly lists the files included in a source export. Before publishing,
+create a fresh local directory without the original Git history:
 
 ```bash
 python3 scripts/export_public.py --output ../job-apply-cli-export
 ```
 
-该命令不会创建远程仓库、提交、推送或上传。已有目录不会被覆盖。原始工作区的历史可能
-包含此前的个人配置，不能用一次当前文件检查代替历史清理；共享时使用检查后的导出目录。
+This command does not create a remote repository, commit, push, or upload anything. It refuses
+to overwrite an existing directory. The original workspace's history may contain old personal
+configuration; checking current files does not audit that history. Share the reviewed export.
 
-保留现有 Apache-2.0 许可证，第三方浏览器和模型运行时不随项目分发。
+The project retains its Apache-2.0 license. Third-party browser and model runtimes are not
+distributed with the source.
 
-协作流程见 [贡献指南](CONTRIBUTING.md)、[审核标准](docs/review-policy.md) 和 [自动化配置](docs/automation.md)。
-发行包名为 `job-apply-cli`；旧命令 `job-apply-agent` 仍可使用。
+See [contributing](CONTRIBUTING.md), [review policy](docs/review-policy.md) and [automation setup](docs/automation.md).
+The distribution is `job-apply-cli`; the existing `job-apply-agent` command remains an alias.

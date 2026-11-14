@@ -1,7 +1,7 @@
 # Automation setup / 自动化配置
 
-The repository is private while collaboration is prepared. The package/repository name is
-`job-apply-cli`. A PyPI upload makes the distribution public even while GitHub remains private.
+The package and repository are named `job-apply-cli`. GitHub visibility and PyPI publication
+are separate controls. A PyPI upload makes the distribution public.
 The release PR is the human publication decision; do not merge it until the release is ready.
 
 ## Workflows
@@ -100,7 +100,7 @@ succeeded; inspect PyPI and the run before retrying. Do not overwrite or recycle
 
 ## 中文
 
-协作仓库保持 private，项目名统一为 `job-apply-cli`。上传 PyPI 会公开发行包；合并发布 PR 是发布
+仓库与发行包名统一为 `job-apply-cli`。GitHub 可见性与 PyPI 发布分别控制；上传 PyPI 会公开发行包。合并发布 PR 是发布
 决定，确认可以公开后再合并。CI 执行格式、lint、类型、安全、隐私、测试与三系统安装验证，
 `validate` 是合并门槛。PR-Agent 只审核最新已通过 CI 的 ready PR，使用主分支规则，不执行 PR
 代码、不写描述、不批准。Claude 由维护者针对具体问题手动调用，输出补丁，进入普通 PR 后再验证。

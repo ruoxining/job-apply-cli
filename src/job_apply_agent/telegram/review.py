@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import or_, select
 from telegram import ForceReply, InlineKeyboardButton, InlineKeyboardMarkup
@@ -311,7 +312,9 @@ class TelegramReviewGateway:
                     session, raw, profile, policy, ingested_via="telegram_jd"
                 )
                 job = session.get(JobPostingRecord, result.job_id)
-                summary = {
+                if job is None:
+                    raise LookupError("ingested job was not persisted")
+                summary: dict[str, Any] = {
                     "company": job.company,
                     "title": job.title,
                     "score": job.score,

@@ -3,9 +3,12 @@
 Revision ID: 3b8f3c6d7a21
 Revises: 811a2bd52e30
 """
+
 from typing import Sequence, Union
-from alembic import op
+
 import sqlalchemy as sa
+
+from alembic import op
 
 revision: str = "3b8f3c6d7a21"
 down_revision: Union[str, None] = "811a2bd52e30"

@@ -249,8 +249,8 @@ async def fill_application_hybrid(
                         {"step": step, "route": "host", "action": "finish", "outcome": "rejected"}
                     )
                     continue
-                target = (
-                    fallback_target
+                target: dict[str, Any] = (
+                    (fallback_target or {})
                     if driver_refs is not None
                     else next(
                         (e for e in observation["elements"] if e["ref"] == action.get("ref")), {}
@@ -302,6 +302,8 @@ async def fill_application_hybrid(
                 trace.append(item)
                 try:
                     if driver_refs is not None:
+                        if driver is None or driver_observation is None:
+                            raise UnsafeComputerAction("fallback has no bound Driver observation")
                         if (
                             kind not in {"click", "fill"}
                             or action.get("ref") != driver_refs[0]["ref"]

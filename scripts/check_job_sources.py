@@ -25,8 +25,7 @@ async def check(path: Path) -> int:
                 url = f"https://{host}/v0/postings/{slug}?mode=json"
             elif kind == "ashby":
                 url = (
-                    f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
-                    "?includeCompensation=true"
+                    f"https://api.ashbyhq.com/posting-api/job-board/{slug}?includeCompensation=true"
                 )
             else:
                 print(f"FAIL {kind}/{slug}: unsupported source kind")

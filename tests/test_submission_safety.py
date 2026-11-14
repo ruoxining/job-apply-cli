@@ -19,17 +19,25 @@ async def test_final_submit_requires_ack_before_any_browser_or_claim_access(adap
 
 async def test_worker_without_ack_stops_before_browser_launch(session, monkeypatch):
     job = JobPostingRecord(
-        id="unacknowledged", canonical_key="u" * 64, source="lever",
-        source_id="unacknowledged", sources=[], company="Example", title="Engineer",
-        url="https://example.test/job", location="Toronto", normalized={},
+        id="unacknowledged",
+        canonical_key="u" * 64,
+        source="lever",
+        source_id="unacknowledged",
+        sources=[],
+        company="Example",
+        title="Engineer",
+        url="https://example.test/job",
+        location="Toronto",
+        normalized={},
         application_state=ApplicationState.MATERIALS_READY.value,
-        resume_sha256="fake-hash", resume_pdf_path="/tmp/example-resume.pdf",
+        resume_sha256="fake-hash",
+        resume_pdf_path="/tmp/example-resume.pdf",
     )
     session.add(job)
     session.commit()
-    monkeypatch.setattr(tasks, "settings", Settings(
-        _env_file=None, allow_live_submit=True, live_submit_ack=""
-    ))
+    monkeypatch.setattr(
+        tasks, "settings", Settings(_env_file=None, allow_live_submit=True, live_submit_ack="")
+    )
     monkeypatch.setattr(tasks, "get_session_factory", lambda: lambda: session)
     result = await tasks._run_application(job.id, "test-key")
     assert result == RunStatus.NEEDS_HUMAN.value

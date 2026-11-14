@@ -26,7 +26,7 @@ from .ats.lcu_harness import LcuBrowserSession
 from .collectors import AshbySource, BoardConfig, GreenhouseSource, LeverSource
 from .config import get_settings
 from .db import get_session_factory
-from .domain.enums import ApplicationState, ATSKind, RunStatus
+from .domain.enums import ApplicationState, ATSKind, RunStatus, Sensitivity
 from .domain.schemas import (
     AnswerBankEntry,
     CandidateProfile,
@@ -206,6 +206,8 @@ class DatabaseSubmissionClaim:
         with get_session_factory()() as session:
             self.repository.complete_submit(session, self.job_id, receipt)
             job = session.get(JobPostingRecord, self.job_id)
+            if job is None:
+                raise LookupError(f"application {self.job_id} not found")
             job.application_state = ApplicationState.SUBMITTED.value
             session.commit()
 
@@ -229,9 +231,7 @@ def prepare_application(application_id: str, profile_payload: dict) -> str:
         if not job.resume_sha256:
             normalized = dict(job.normalized or {})
             normalized.pop("raw_snapshot", None)
-            ResumeVariantService(
-                settings.artifacts_dir, provided_file=settings.resume_file
-            ).create(
+            ResumeVariantService(settings.artifacts_dir, provided_file=settings.resume_file).create(
                 session,
                 job_id=job.id,
                 job=JobPosting.model_validate(normalized),
@@ -292,7 +292,8 @@ async def _run_application(application_id: str, idempotency_key: str) -> str:
             job.submission_status = RunStatus.NEEDS_HUMAN.value
             job.blocker = {
                 "kind": (
-                    "live_submit_disabled" if not settings.allow_live_submit
+                    "live_submit_disabled"
+                    if not settings.allow_live_submit
                     else "live_submit_unacknowledged"
                 ),
                 "detail": live_error,
@@ -339,7 +340,10 @@ async def _run_application(application_id: str, idempotency_key: str) -> str:
         if job.source == ATSKind.GREENHOUSE.value:
             job_url = f"https://boards.greenhouse.io/embed/job_app?token={job.source_id}"
         ats = job.source
-        resume_path = Path(job.resume_pdf_path or job.resume_docx_path)
+        resume_filename = job.resume_pdf_path or job.resume_docx_path
+        if resume_filename is None:
+            raise ValueError("application has no locked resume artifact")
+        resume_path = Path(resume_filename)
         answer_rows = list(session.scalars(select(AnswerBankRecord)))
         profile = CandidateProfile.model_validate(settings.candidate_profile())
         experiences = (
@@ -405,7 +409,7 @@ async def _run_application(application_id: str, idempotency_key: str) -> str:
                 semantic_key=row.semantic_key,
                 answer=row.answer,
                 regions=row.regions,
-                sensitivity=row.sensitivity,
+                sensitivity=Sensitivity(row.sensitivity),
                 valid_until=row.valid_until,
             )
             for row in answer_rows
@@ -657,7 +661,9 @@ async def _run_application(application_id: str, idempotency_key: str) -> str:
                         )
                         await planner.check_ready()
                         try:
-                            result = await fill_application_hybrid(
+                            if codex_preparation is None:
+                                raise UnsafeComputerAction("Codex form preparation is unavailable")
+                            hybrid_result = await fill_application_hybrid(
                                 page,
                                 planner=planner,
                                 max_steps=settings.cua_max_steps,
@@ -673,7 +679,7 @@ async def _run_application(application_id: str, idempotency_key: str) -> str:
                             log.info(
                                 "codex_hybrid_completed application_id=%s trace=%s",
                                 application_id,
-                                result.trace,
+                                hybrid_result.trace,
                             )
                         finally:
                             await planner.close()
@@ -685,6 +691,8 @@ async def _run_application(application_id: str, idempotency_key: str) -> str:
                 await adapter.fill(page, answers, resume_path=resume_path)
             with get_session_factory()() as session:
                 job = session.get(JobPostingRecord, application_id)
+                if job is None:
+                    raise LookupError(f"application {application_id} not found")
                 job.application_state = ApplicationState.SUBMITTING.value
                 session.commit()
             result = await adapter.submit(page, DatabaseSubmissionClaim(application_id))
@@ -735,6 +743,8 @@ def _pause(
 ) -> str:
     with get_session_factory()() as session:
         job = session.get(JobPostingRecord, application_id)
+        if job is None:
+            raise LookupError(f"application {application_id} not found")
         job.application_state = ApplicationState.NEEDS_HUMAN.value
         job.submission_status = RunStatus.NEEDS_HUMAN.value
         job.blocker = {"kind": kind, "detail": detail, **(extra or {})}
@@ -745,6 +755,8 @@ def _pause(
 def _save_narrative_answer(application_id: str, key: str, record: dict) -> None:
     with get_session_factory()() as session:
         job = session.get(JobPostingRecord, application_id)
+        if job is None:
+            raise LookupError(f"application {application_id} not found")
         current = dict(job.form_answers or {})
         narratives = dict(current.get("narratives") or {})
         narratives[key] = record

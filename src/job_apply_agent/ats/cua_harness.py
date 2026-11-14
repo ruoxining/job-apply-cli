@@ -210,7 +210,7 @@ def _action_trace(
     issues: tuple[str, ...] = (),
 ) -> dict[str, Any]:
     ref = action.get("ref")
-    element = next(
+    element: dict[str, Any] = next(
         (item for item in observation.get("refs", []) if item.get("ref") == ref),
         {},
     )

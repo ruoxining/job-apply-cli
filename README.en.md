@@ -1,4 +1,4 @@
-# Job Apply Agent
+# Job Apply CLI
 
 English | [简体中文](README.md)
 
@@ -19,7 +19,7 @@ Requires Python 3.12+ and uv. No personal resume repository or Git submodule is 
 ```bash
 uv sync --frozen --extra test
 cp .env.example .env
-uv run job-apply-agent onboard init
+uv run job-apply-cli onboard init
 ```
 
 Initialization creates local templates in `private/candidate/`. It does not upload files,
@@ -27,10 +27,10 @@ call models, collect jobs, or submit applications. Follow the [onboarding guide]
 to enter your information and provide a reviewed PDF or DOCX, then run:
 
 ```bash
-uv run job-apply-agent onboard check
-uv run job-apply-agent init-db
-uv run job-apply-agent onboard import-answers
-uv run job-apply-agent serve
+uv run job-apply-cli onboard check
+uv run job-apply-cli init-db
+uv run job-apply-cli onboard import-answers
+uv run job-apply-cli serve
 ```
 
 Templates contain placeholders, so checks are expected to fail until you fill them in.
@@ -85,7 +85,7 @@ python3 scripts/export_public.py --check
 create a fresh local directory without the original Git history:
 
 ```bash
-python3 scripts/export_public.py --output ../job-apply-agent-public
+python3 scripts/export_public.py --output ../job-apply-cli-export
 ```
 
 This command does not create a remote repository, commit, push, or upload anything. It refuses
@@ -94,3 +94,6 @@ configuration; checking current files does not audit that history. Share the rev
 
 The project retains its Apache-2.0 license. Third-party browser and model runtimes are not
 distributed with the source.
+
+See [contributing](CONTRIBUTING.md), [review policy](docs/review-policy.md) and [automation setup](docs/automation.md).
+The distribution is `job-apply-cli`; the existing `job-apply-agent` command remains an alias.

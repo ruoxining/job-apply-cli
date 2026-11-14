@@ -211,7 +211,7 @@ class FormPreparation:
                 choice_groups.setdefault(element["group"], []).append(element)
         for label, targets in choice_groups.items():
             key = "choice:" + question_key(label)
-            binding = {
+            binding: dict[str, Any] = {
                 "field_id": key,
                 "label": label,
                 "group_label": label,

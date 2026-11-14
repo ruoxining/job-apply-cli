@@ -8,9 +8,16 @@ from job_apply_agent.services.review_actions import ReviewActionService
 
 def job(job_id: str, *, with_resume: bool) -> JobPostingRecord:
     return JobPostingRecord(
-        id=job_id, canonical_key=job_id.ljust(64, "0"), source="lever", source_id=job_id,
-        sources=[], company="Acme", title="Engineer", url=f"https://example.test/{job_id}",
-        location="Toronto", normalized={},
+        id=job_id,
+        canonical_key=job_id.ljust(64, "0"),
+        source="lever",
+        source_id=job_id,
+        sources=[],
+        company="Acme",
+        title="Engineer",
+        url=f"https://example.test/{job_id}",
+        location="Toronto",
+        normalized={},
         application_state=ApplicationState.AWAITING_RESUME_REVIEW.value,
         resume_sha256="abc" if with_resume else None,
         resume_pdf_path="/tmp/resume.pdf" if with_resume else None,
@@ -21,9 +28,16 @@ def needs_human_job(
     job_id: str, *, with_resume: bool = True, blocker: dict | None = None
 ) -> JobPostingRecord:
     return JobPostingRecord(
-        id=job_id, canonical_key=job_id.ljust(64, "0"), source="lever", source_id=job_id,
-        sources=[], company="Acme", title="Engineer", url=f"https://example.test/{job_id}",
-        location="Toronto", normalized={},
+        id=job_id,
+        canonical_key=job_id.ljust(64, "0"),
+        source="lever",
+        source_id=job_id,
+        sources=[],
+        company="Acme",
+        title="Engineer",
+        url=f"https://example.test/{job_id}",
+        location="Toronto",
+        normalized={},
         application_state=ApplicationState.NEEDS_HUMAN.value,
         submission_status=ApplicationState.NEEDS_HUMAN.value,
         blocker=blocker,
@@ -62,9 +76,7 @@ def test_rejection_and_feedback_are_persisted_on_job(session):
     service = ReviewActionService()
 
     rejected = service.reject_application(session, record.id)
-    feedback = service.record_feedback(
-        session, record.id, "岗位太偏 CV，降低同类职位排名"
-    )
+    feedback = service.record_feedback(session, record.id, "岗位太偏 CV，降低同类职位排名")
     session.commit()
 
     assert rejected.accepted

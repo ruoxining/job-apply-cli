@@ -143,8 +143,7 @@ class PriorityPolicy:
         # strategic title or high match score is worth reviewing carefully.
         is_low_stakes = low_stakes_company or low_stakes_title
         is_high_value = company_whitelisted or (
-            not is_low_stakes
-            and (title_whitelisted or total >= policy.high_value_threshold)
+            not is_low_stakes and (title_whitelisted or total >= policy.high_value_threshold)
         )
         reasons = []
         if company_whitelisted:

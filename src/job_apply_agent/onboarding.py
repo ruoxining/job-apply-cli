@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from datetime import date
 from importlib.resources import files
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 from sqlalchemy import select
@@ -66,7 +68,7 @@ def check(settings: Settings) -> dict:
     """Validate structure and readiness without printing personal field values."""
     errors = []
     counts = {}
-    operations = {
+    operations: dict[str, Callable[[], Any]] = {
         "profile": lambda: CandidateProfile.model_validate(settings.candidate_profile()),
         "policy": lambda: SearchPolicy.model_validate(settings.search_policy()),
         "sources": settings.source_boards,

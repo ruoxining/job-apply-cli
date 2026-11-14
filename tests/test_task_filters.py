@@ -114,7 +114,8 @@ async def test_enabled_cua_requires_glm_api_key_before_browser_launch(session, m
         tasks,
         "settings",
         Settings(
-            allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK,
+            allow_live_submit=True,
+            live_submit_ack=LIVE_SUBMIT_ACK,
             cua_enabled=True,
             glm_api_key=None,
             browser_headless=False,

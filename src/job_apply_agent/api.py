@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import secrets
 from collections.abc import Callable
 from datetime import date, datetime, time, timezone
-import secrets
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
@@ -20,7 +20,6 @@ from .models import JobPostingRecord
 from .services.orchestrator import ApplicationOrchestrator
 from .services.policy import PriorityPolicy
 from .services.quota import DailyQuotaService
-
 
 SessionDep = Annotated[Session, Depends(get_session)]
 SettingsDep = Annotated[Any, Depends(get_settings)]
@@ -47,9 +46,7 @@ def require_api_token(
         )
 
 
-app = FastAPI(
-    title="Job Apply Agent", version="0.2.0", dependencies=[Depends(require_api_token)]
-)
+app = FastAPI(title="Job Apply Agent", version="0.2.0", dependencies=[Depends(require_api_token)])
 
 
 class AssessRequest(BaseModel):
@@ -102,31 +99,43 @@ def operations_status(session: SessionDep, settings: SettingsDep) -> dict:
         JobPostingRecord.score >= settings.high_value_threshold,
     )
     jobs_total = session.scalar(select(func.count()).select_from(JobPostingRecord)) or 0
-    jobs_today = session.scalar(
-        select(func.count()).select_from(JobPostingRecord).where(
-            JobPostingRecord.first_seen_at >= today_start
+    jobs_today = (
+        session.scalar(
+            select(func.count())
+            .select_from(JobPostingRecord)
+            .where(JobPostingRecord.first_seen_at >= today_start)
         )
-    ) or 0
-    useful_total = session.scalar(
-        select(func.count()).select_from(JobPostingRecord).where(*useful)
-    ) or 0
-    useful_today = session.scalar(
-        select(func.count()).select_from(JobPostingRecord).where(
-            *useful, JobPostingRecord.first_seen_at >= today_start
+        or 0
+    )
+    useful_total = (
+        session.scalar(select(func.count()).select_from(JobPostingRecord).where(*useful)) or 0
+    )
+    useful_today = (
+        session.scalar(
+            select(func.count())
+            .select_from(JobPostingRecord)
+            .where(*useful, JobPostingRecord.first_seen_at >= today_start)
         )
-    ) or 0
+        or 0
+    )
     states = _state_counts(session)
     active_states = {ApplicationState.FILLING.value, ApplicationState.SUBMITTING.value}
     active_applications = sum(states.get(state, 0) for state in active_states)
     queued = sum(
         states.get(state, 0)
-        for state in {ApplicationState.AUTO_APPLY_QUEUED.value, ApplicationState.MATERIALS_READY.value}
+        for state in {
+            ApplicationState.AUTO_APPLY_QUEUED.value,
+            ApplicationState.MATERIALS_READY.value,
+        }
     )
-    active_submissions = session.scalar(
-        select(func.count()).select_from(JobPostingRecord).where(
-            JobPostingRecord.submission_status == RunStatus.RUNNING.value
+    active_submissions = (
+        session.scalar(
+            select(func.count())
+            .select_from(JobPostingRecord)
+            .where(JobPostingRecord.submission_status == RunStatus.RUNNING.value)
         )
-    ) or 0
+        or 0
+    )
     quota = DailyQuotaService(
         fetch_limit=settings.daily_fetch_limit,
         apply_limit=settings.daily_auto_submit_limit,
@@ -192,7 +201,10 @@ def get_quota(quota_date: date, session: SessionDep, settings: SettingsDep) -> d
 def preview_assessment(request: AssessRequest) -> dict:
     normalized = JobNormalizer().normalize(request.job)
     assessment = PriorityPolicy().score(normalized, request.profile, request.policy)
-    return {"job": normalized.model_dump(mode="json"), "assessment": assessment.model_dump(mode="json")}
+    return {
+        "job": normalized.model_dump(mode="json"),
+        "assessment": assessment.model_dump(mode="json"),
+    }
 
 
 @app.post("/v1/jobs", status_code=201)
@@ -263,7 +275,11 @@ def list_applications(
     total = session.scalar(select(func.count()).select_from(JobPostingRecord).where(*filters)) or 0
     rows = list(
         session.scalars(
-            select(JobPostingRecord).where(*filters).order_by(JobPostingRecord.id).limit(limit).offset(offset)
+            select(JobPostingRecord)
+            .where(*filters)
+            .order_by(JobPostingRecord.id)
+            .limit(limit)
+            .offset(offset)
         )
     )
     return {
@@ -282,11 +298,16 @@ def list_applications(
 
 
 @app.post("/v1/collections/run")
-def run_collections(request: CollectionRequest, session: SessionDep, dispatcher: DispatcherDep) -> dict:
+def run_collections(
+    request: CollectionRequest, session: SessionDep, dispatcher: DispatcherDep
+) -> dict:
     settings = get_settings()
     boards = request.boards if request.boards is not None else settings.source_boards()
     if not boards:
-        raise HTTPException(status_code=400, detail="no source boards configured; pass boards or set SOURCE_BOARDS_JSON")
+        raise HTTPException(
+            status_code=400,
+            detail="no source boards configured; pass boards or set SOURCE_BOARDS_JSON",
+        )
     profile = request.profile if request.profile is not None else settings.candidate_profile()
     policy = request.policy if request.policy is not None else settings.search_policy()
     try:

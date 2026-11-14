@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import cast
 
-from sqlalchemy import update
+from sqlalchemy import CursorResult, update
 from sqlalchemy.orm import Session
 
 from .domain.enums import RunStatus
@@ -37,7 +38,7 @@ class SubmissionRepository:
             .values(submit_started_at=now, submission_status=RunStatus.RUNNING.value)
         )
         session.flush()
-        return result.rowcount == 1
+        return cast(CursorResult, result).rowcount == 1
 
     def complete_submit(self, session: Session, run_id: str, receipt: dict) -> None:
         now = datetime.now(timezone.utc)

@@ -137,7 +137,7 @@ def start_managed_backlog(
         )
     _write_state(client, state)
     return BacklogStartResult(
-        campaign_id=state["campaign_id"],
+        campaign_id=str(state["campaign_id"]),
         status="active",
         already_active=False,
     )

@@ -45,7 +45,9 @@ class FakeRedis:
 
 
 def configured_settings() -> Settings:
-    return Settings(allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK, redis_url="redis://unused")
+    return Settings(
+        allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK, redis_url="redis://unused"
+    )
 
 
 def test_explicit_canary_scope_never_sweeps_other_jobs(session):

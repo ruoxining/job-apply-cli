@@ -14,10 +14,20 @@ def job(
     ingested_via: str | None = None,
 ) -> JobPostingRecord:
     return JobPostingRecord(
-        id=job_id, canonical_key=job_id.ljust(64, "0"), source="lever", source_id=job_id,
-        sources=[], company="Acme", title="Engineer", url=f"https://example.test/{job_id}",
-        location="Toronto", normalized={}, first_seen_at=first_seen, last_seen_at=first_seen,
-        apply_claimed_on=claimed, ingested_via=ingested_via,
+        id=job_id,
+        canonical_key=job_id.ljust(64, "0"),
+        source="lever",
+        source_id=job_id,
+        sources=[],
+        company="Acme",
+        title="Engineer",
+        url=f"https://example.test/{job_id}",
+        location="Toronto",
+        normalized={},
+        first_seen_at=first_seen,
+        last_seen_at=first_seen,
+        apply_claimed_on=claimed,
+        ingested_via=ingested_via,
     )
 
 
@@ -41,8 +51,13 @@ def test_quota_is_derived_from_job_rows_and_blocks_over_limit(session):
 
 def test_snapshot_excludes_manually_ingested_rows_from_fetch_count(session):
     day = date(2026, 10, 10)
-    session.add(job("manual", first_seen=datetime(2026, 10, 10, tzinfo=timezone.utc),
-                    ingested_via="telegram_jd"))
+    session.add(
+        job(
+            "manual",
+            first_seen=datetime(2026, 10, 10, tzinfo=timezone.utc),
+            ingested_via="telegram_jd",
+        )
+    )
     session.add(job("collected", first_seen=datetime(2026, 10, 10, 1, tzinfo=timezone.utc)))
     session.flush()
     snapshot = DailyQuotaService(fetch_limit=5, apply_limit=2).snapshot(session, day)

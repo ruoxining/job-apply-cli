@@ -1,0 +1,52 @@
+name: PR-Agent
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  pull_request_target:
+    types: [ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Ready PR number (latest CI must have passed)
+        required: true
+        type: number
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number || inputs.pr || github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+jobs:
+  review:
+    if: >-
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    environment: ai-review
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: '0.11.18'
+          enable-cache: false
+      - name: Install pinned reviewer, never PR dependencies
+        run: python3 scripts/install_reviewer.py --venv /tmp/pr-agent-venv
+      - name: Review data with trusted policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_AGENT_API_KEY: ${{ secrets.PR_AGENT_API_KEY }}
+          PR_AGENT_API_BASE: ${{ vars.PR_AGENT_API_BASE }}
+          PR_AGENT_MODEL: ${{ vars.PR_AGENT_MODEL }}
+          PR_NUMBER: ${{ inputs.pr }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            /tmp/pr-agent-venv/bin/python scripts/ai_review.py --pr "$PR_NUMBER"
+          else
+            /tmp/pr-agent-venv/bin/python scripts/ai_review.py
+          fi

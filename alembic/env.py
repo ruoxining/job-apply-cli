@@ -1,10 +1,9 @@
 from logging.config import fileConfig
 
 from alembic import context
-
+from job_apply_agent import models  # noqa: F401
 from job_apply_agent.config import get_settings
 from job_apply_agent.db import Base
-from job_apply_agent import models  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
@@ -14,7 +13,11 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    context.configure(url=config.get_main_option("sqlalchemy.url"), target_metadata=target_metadata, literal_binds=True)
+    context.configure(
+        url=config.get_main_option("sqlalchemy.url"),
+        target_metadata=target_metadata,
+        literal_binds=True,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
@@ -34,4 +37,3 @@ def run_migrations_online() -> None:
 
 
 run_migrations_offline() if context.is_offline_mode() else run_migrations_online()
-

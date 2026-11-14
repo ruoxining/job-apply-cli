@@ -14,10 +14,7 @@ class GreenhouseSource(JobSource):
         self.board_slug = self.validate_slug(board_slug)
 
     async def fetch(self, cursor: str | None = None) -> list[RawJob]:
-        url = (
-            "https://boards-api.greenhouse.io/v1/boards/"
-            f"{self.board_slug}/jobs?content=true"
-        )
+        url = f"https://boards-api.greenhouse.io/v1/boards/{self.board_slug}/jobs?content=true"
         payload = await self.get_json(url)
         if not isinstance(payload, dict) or not isinstance(payload.get("jobs"), list):
             raise CollectorError("unexpected Greenhouse response")
@@ -51,4 +48,3 @@ def _parse_datetime(value: str | None) -> datetime | None:
         return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
-

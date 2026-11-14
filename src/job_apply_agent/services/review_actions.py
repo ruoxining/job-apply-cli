@@ -34,13 +34,9 @@ class ReviewActionService:
         if job is None:
             return ApplyDecision(False, "找不到这条申请。")
         if job.application_state != ApplicationState.AWAITING_RESUME_REVIEW.value:
-            return ApplyDecision(
-                False, f"当前状态为 {job.application_state}，不能重复批准。"
-            )
+            return ApplyDecision(False, f"当前状态为 {job.application_state}，不能重复批准。")
         if not job.resume_sha256 or not (job.resume_pdf_path or job.resume_docx_path):
-            return ApplyDecision(
-                False, "简历尚未锁定，暂不能投递；请先完成简历审核。"
-            )
+            return ApplyDecision(False, "简历尚未锁定，暂不能投递；请先完成简历审核。")
         try:
             self.quota.claim_application(session, job)
         except QuotaExceeded:
@@ -58,16 +54,12 @@ class ReviewActionService:
         if job is None:
             return ApplyDecision(False, "找不到这条申请。")
         if job.application_state != ApplicationState.AWAITING_RESUME_REVIEW.value:
-            return ApplyDecision(
-                False, f"当前状态为 {job.application_state}，不能重复拒绝。"
-            )
+            return ApplyDecision(False, f"当前状态为 {job.application_state}，不能重复拒绝。")
         job.application_state = ApplicationState.SKIPPED.value
         job.review_feedback = feedback.strip() if feedback and feedback.strip() else None
         job.reviewed_at = datetime.now(timezone.utc)
         session.flush()
-        return ApplyDecision(
-            True, "已记录不投；请回复一条消息说明原因或调整建议。"
-        )
+        return ApplyDecision(True, "已记录不投；请回复一条消息说明原因或调整建议。")
 
     def record_feedback(
         self, session: Session, application_id: str, feedback: str
@@ -83,9 +75,7 @@ class ReviewActionService:
         job.review_feedback = value
         job.reviewed_at = datetime.now(timezone.utc)
         session.flush()
-        return ApplyDecision(
-            True, "已保存反馈，后续可以用于调整排序和路由规则。"
-        )
+        return ApplyDecision(True, "已保存反馈，后续可以用于调整排序和路由规则。")
 
     def mark_applied_manually(self, session: Session, application_id: str) -> ApplyDecision:
         """Record that the candidate takes over; the pipeline stands down."""
@@ -112,9 +102,7 @@ class ReviewActionService:
         if kind == BlockerKind.SUBMIT_OUTCOME_UNKNOWN.value:
             # Recovery boundary: an unknown outcome must be reconciled by a
             # human first; enqueueing again risks a duplicate submission.
-            return ApplyDecision(
-                False, "提交结果未知，系统禁止自动重试；请先人工核实是否已提交。"
-            )
+            return ApplyDecision(False, "提交结果未知，系统禁止自动重试；请先人工核实是否已提交。")
         job.blocker = None
         # If this retry pauses again, the result should notify with fresh buttons.
         job.telegram_result_notified_at = None

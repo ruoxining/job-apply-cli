@@ -10,7 +10,7 @@ import asyncio
 import json
 import time
 from datetime import date
-from typing import Literal
+from typing import Any, Literal
 
 from job_apply_agent.domain.schemas import AnswerBankEntry, FormQuestion, ResolvedAnswer
 from job_apply_agent.services.answers import AnswerResolver
@@ -129,7 +129,7 @@ class AnswerReasoner:
         if key in self._memo:
             return self._memo[key].model_copy(update={"field_id": question.field_id})
         started = time.perf_counter()
-        record = {
+        record: dict[str, Any] = {
             "key": key,
             "question": question.model_dump(mode="json"),
             "mode": self.mode,

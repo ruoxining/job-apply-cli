@@ -10,8 +10,7 @@ import subprocess
 import sys
 from typing import Any
 
-
-REMOTE_SCRIPT = r'''
+REMOTE_SCRIPT = r"""
 remote_dir=$1
 printf '%s\n' '__REPOSITORY__'
 if [ ! -d "$remote_dir" ]; then
@@ -39,7 +38,7 @@ try:
 except Exception:
     print("API status request failed; check API_TOKEN and service health")
 PY
-'''
+"""
 
 
 def _sections(output: str) -> dict[str, str]:
@@ -110,10 +109,7 @@ def _print_report(host: str, sections: dict[str, str]) -> int:
     discovery = status["discovery"]
     applications = status["applications"]
     print("\nDatabase:")
-    print(
-        f"  {database['status']}; jobs={database['jobs']}, "
-        f"tables={database['tables']}"
-    )
+    print(f"  {database['status']}; jobs={database['jobs']}, tables={database['tables']}")
     print("\nDiscovery:")
     print(
         f"  today={discovery['jobs_today']}; useful_today={discovery['useful_jobs_today']} "

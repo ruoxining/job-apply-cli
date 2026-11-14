@@ -16,9 +16,7 @@ class LeverSource(JobSource):
 
     async def fetch(self, cursor: str | None = None) -> list[RawJob]:
         host = "api.eu.lever.co" if self.region == "eu" else "api.lever.co"
-        payload = await self.get_json(
-            f"https://{host}/v0/postings/{self.board_slug}?mode=json"
-        )
+        payload = await self.get_json(f"https://{host}/v0/postings/{self.board_slug}?mode=json")
         if not isinstance(payload, list):
             raise CollectorError("unexpected Lever response")
         jobs: list[RawJob] = []
@@ -42,4 +40,3 @@ class LeverSource(JobSource):
                 )
             )
         return jobs
-

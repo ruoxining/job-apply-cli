@@ -156,7 +156,9 @@ def scope_question(
                 if kind == "sponsorship"
                 else "work_authorization_by_country"
             )
-            return question.model_copy(update={"semantic_key": keys.get((region, kind), fallback)})
+            return question.model_copy(
+                update={"semantic_key": keys.get((region or "", kind), fallback)}
+            )
     if question_label == (
         "if hired by stackadapt, do you intend to hold any secondary employment, advisory position "
         "(e.g. membership on a board of directors), or volunteer position that (1) is on behalf of a "

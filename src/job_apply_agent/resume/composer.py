@@ -68,9 +68,7 @@ class ResumeComposer:
 
         def score(fact: ProfileFact) -> tuple[int, str]:
             fact_terms = set(
-                re.findall(
-                    r"[a-z0-9+#.]+", f"{fact.statement} {' '.join(fact.skills)}".casefold()
-                )
+                re.findall(r"[a-z0-9+#.]+", f"{fact.statement} {' '.join(fact.skills)}".casefold())
             )
             overlap = len(terms & fact_terms)
             instruction = (revision or "").casefold()
@@ -95,7 +93,7 @@ class ResumeComposer:
         for bullet in content.bullets:
             document.add_paragraph(bullet, style="List Bullet")
         document.core_properties.subject = f"ATS resume template: {template}"
-        document.save(path)
+        document.save(str(path))
 
     @staticmethod
     def _convert_pdf(docx_path: Path) -> Path | None:

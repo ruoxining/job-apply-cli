@@ -56,8 +56,9 @@ def _locations(item: dict) -> str:
 
 
 def _integer(value: object) -> int | None:
-    try:
-        return int(value) if value is not None else None
-    except (TypeError, ValueError):
+    if not isinstance(value, (str, bytes, bytearray, int, float)):
         return None
-
+    try:
+        return int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None

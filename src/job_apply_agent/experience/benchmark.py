@@ -49,6 +49,7 @@ def summarize(results: list[dict]) -> dict:
         rows = [r for r in results if r["arm"] == arm]
         usage = [usage_totals(r["trace"]) for r in rows]
         complete_usage = bool(rows) and all(u is not None for u in usage)
+        available_usage = [u for u in usage if u is not None]
         summary[arm] = {
             "attempts": len(rows),
             "accepted_by_own_checker": sum(r["trace"]["status"] == "accepted" for r in rows),
@@ -58,7 +59,9 @@ def summarize(results: list[dict]) -> dict:
             "median_seconds": statistics.median(r["trace"]["elapsed_seconds"] for r in rows)
             if rows
             else None,
-            "total_tokens": {key: sum(u[key] for u in usage) for key in usage[0]}
+            "total_tokens": {
+                key: sum(u[key] for u in available_usage) for key in available_usage[0]
+            }
             if complete_usage
             else None,
             "usage_missing_attempts": sum(u is None for u in usage),

@@ -12,7 +12,7 @@ from typing import Any
 
 from .cua_harness import UnsafeComputerAction
 
-ACTION_SCHEMA = {
+ACTION_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
     "properties": {

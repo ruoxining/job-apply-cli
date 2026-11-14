@@ -1,4 +1,4 @@
-from .base import ATSAdapter, ATSBlocked, ApplicationResult, InspectionResult
+from .base import ApplicationResult, ATSAdapter, ATSBlocked, InspectionResult
 from .playwright_adapter import AshbyAdapter, GreenhouseAdapter, LeverAdapter
 
 __all__ = [

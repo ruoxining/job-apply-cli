@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from job_apply_agent.db import Base
 import job_apply_agent.models  # noqa: F401
+from job_apply_agent.db import Base
 
 
 @pytest.fixture
@@ -20,4 +20,3 @@ def session():
     factory = sessionmaker(bind=engine, expire_on_commit=False)
     with factory() as db_session:
         yield db_session
-

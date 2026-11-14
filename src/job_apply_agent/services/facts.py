@@ -55,4 +55,3 @@ class FactValidator:
         errors = self.validate(content, facts)
         if errors:
             raise FactValidationError("; ".join(errors))
-

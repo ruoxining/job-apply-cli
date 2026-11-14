@@ -7,11 +7,13 @@ from pathlib import Path
 
 import uvicorn
 
+from . import __version__
 from .db import Base, get_engine
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="job-apply-agent")
+    parser.add_argument("--version", action="version", version=__version__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("init-db", help="create database tables for local development")
     onboarding = subparsers.add_parser(
@@ -70,8 +72,8 @@ def main() -> None:
     elif args.command == "managed-apply":
         from .managed_apply import dispatch_managed_application
 
-        result = dispatch_managed_application(args.application_id)
-        print(json.dumps(asdict(result), sort_keys=True))
+        dispatch = dispatch_managed_application(args.application_id)
+        print(json.dumps(asdict(dispatch), sort_keys=True))
     elif args.command == "application-report":
         from .db import get_session_factory
         from .services.application_report import application_report

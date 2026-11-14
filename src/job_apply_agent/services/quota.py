@@ -38,19 +38,27 @@ class DailyQuotaService:
         quota_date = on or date.today()
         start = datetime.combine(quota_date, time.min, tzinfo=timezone.utc)
         end = start + timedelta(days=1)
-        fetched = session.scalar(
-            select(func.count()).select_from(JobPostingRecord).where(
-                JobPostingRecord.first_seen_at >= start,
-                JobPostingRecord.first_seen_at < end,
-                # Manually ingested rows (/jd) never consume the collect budget.
-                JobPostingRecord.ingested_via.is_(None),
+        fetched = (
+            session.scalar(
+                select(func.count())
+                .select_from(JobPostingRecord)
+                .where(
+                    JobPostingRecord.first_seen_at >= start,
+                    JobPostingRecord.first_seen_at < end,
+                    # Manually ingested rows (/jd) never consume the collect budget.
+                    JobPostingRecord.ingested_via.is_(None),
+                )
             )
-        ) or 0
-        applied = session.scalar(
-            select(func.count()).select_from(JobPostingRecord).where(
-                JobPostingRecord.apply_claimed_on == quota_date
+            or 0
+        )
+        applied = (
+            session.scalar(
+                select(func.count())
+                .select_from(JobPostingRecord)
+                .where(JobPostingRecord.apply_claimed_on == quota_date)
             )
-        ) or 0
+            or 0
+        )
         return QuotaSnapshot(quota_date, fetched, self.fetch_limit, applied, self.apply_limit)
 
     def claim_application(

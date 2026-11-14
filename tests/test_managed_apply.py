@@ -28,7 +28,8 @@ def job(*, state: str = ApplicationState.MATERIALS_READY.value) -> JobPostingRec
 
 def configured_settings() -> Settings:
     return Settings(
-        allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK,
+        allow_live_submit=True,
+        live_submit_ack=LIVE_SUBMIT_ACK,
         cua_enabled=True,
         glm_api_key="secret",
         browser_headless=False,

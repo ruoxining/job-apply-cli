@@ -132,7 +132,8 @@ class DOMBrowser:
         self.assert_origin()
         self.generation += 1
         self.frames = {}
-        elements, excluded, scrolls = [], [], []
+        elements: list[dict[str, Any]] = []
+        excluded, scrolls = [], []
         main_text = ""
         truncated = False
         for index, frame in enumerate(self.page.frames):

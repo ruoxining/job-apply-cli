@@ -120,11 +120,8 @@ def save_experience(session, item: Experience, *, event_key: str) -> Experience:
     previous = Experience.model_validate(row.payload) if row else None
     content = item.model_dump(exclude={"revision", "source"})
     same = previous and content == previous.model_dump(exclude={"revision", "source"})
-    item = item.model_copy(
-        update={
-            "revision": previous.revision if same else (previous.revision + 1 if previous else 1)
-        }
-    )
+    revision = previous.revision + (0 if same else 1) if previous is not None else 1
+    item = item.model_copy(update={"revision": revision})
     payload = item.model_dump(mode="json")
     if row is None:
         row = ExperienceRecord(id=item.id, payload=payload, content_hash=fingerprint(content))

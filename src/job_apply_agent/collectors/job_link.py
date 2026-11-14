@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-from html.parser import HTMLParser
 import ipaddress
 import json
 import re
 import socket
+from html.parser import HTMLParser
 from typing import Any, Awaitable, Callable
 from urllib.parse import urlsplit
 
@@ -20,7 +20,6 @@ from .base import CollectorError
 from .greenhouse import GreenhouseSource
 from .lever import LeverSource
 
-
 MAX_HTML_BYTES = 2_000_000
 MIN_TITLE_CHARS = 3
 MIN_DESCRIPTION_CHARS = 200
@@ -28,17 +27,67 @@ HostValidator = Callable[[str], Awaitable[None]]
 
 _SKIP_TAGS = frozenset({"script", "style", "noscript", "template", "svg"})
 _BLOCK_TAGS = frozenset(
-    {"p", "li", "h1", "h2", "h3", "h4", "h5", "h6", "div", "section", "article", "main",
-     "ul", "ol", "table", "tr", "blockquote", "pre", "header", "footer", "dd", "dt", "figcaption"}
+    {
+        "p",
+        "li",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "div",
+        "section",
+        "article",
+        "main",
+        "ul",
+        "ol",
+        "table",
+        "tr",
+        "blockquote",
+        "pre",
+        "header",
+        "footer",
+        "dd",
+        "dt",
+        "figcaption",
+    }
 )
 _META_KEYS = frozenset({"description", "og:title", "og:site_name"})
 _GENERIC_HOST_LABELS = frozenset(
-    {"www", "jobs", "job", "careers", "career", "work", "boards", "job-boards", "apply",
-     "hiring", "openings", "positions", "join", "company"}
+    {
+        "www",
+        "jobs",
+        "job",
+        "careers",
+        "career",
+        "work",
+        "boards",
+        "job-boards",
+        "apply",
+        "hiring",
+        "openings",
+        "positions",
+        "join",
+        "company",
+    }
 )
 _GENERIC_SITE_WORDS = frozenset(
-    {"careers", "jobs", "job", "hiring", "apply", "work", "company", "remote", "home",
-     "team", "opportunities", "position", "openings"}
+    {
+        "careers",
+        "jobs",
+        "job",
+        "hiring",
+        "apply",
+        "work",
+        "company",
+        "remote",
+        "home",
+        "team",
+        "opportunities",
+        "position",
+        "openings",
+    }
 )
 _TITLE_AT_TAIL_RE = re.compile(r"\s+at\s+([A-Za-z0-9][^,|·]*?)\s*$", re.IGNORECASE)
 _EMPLOYMENT_RE = re.compile(
@@ -84,9 +133,10 @@ def _opens_main_container(tag: str, attributes: dict[str, str]) -> bool:
         return False
     if attributes.get("role", "").casefold() == "main":
         return True
-    return "job" in attributes.get("id", "").casefold() or "job" in attributes.get(
-        "class", ""
-    ).casefold()
+    return (
+        "job" in attributes.get("id", "").casefold()
+        or "job" in attributes.get("class", "").casefold()
+    )
 
 
 class _HeuristicJobParser(HTMLParser):
@@ -265,17 +315,11 @@ def _location(value: Any) -> str:
 
 
 def _split_title_segments(text: str) -> list[str]:
-    return [
-        segment
-        for segment in re.split(r"\s+[|·–—-]\s+", text.strip())
-        if segment
-    ]
+    return [segment for segment in re.split(r"\s+[|·–—-]\s+", text.strip()) if segment]
 
 
 def _visible_text(chunks: list[str]) -> str:
-    return "\n".join(
-        line.strip() for line in "".join(chunks).split("\n") if line.strip()
-    )
+    return "\n".join(line.strip() for line in "".join(chunks).split("\n") if line.strip())
 
 
 def _hostname_stem(url: str) -> str:
@@ -350,9 +394,7 @@ def _parse_html_fallback(url: str, html: str) -> RawJob:
         title=title,
         url=url,
         description=description,
-        employment_type=_fallback_employment_type(
-            _visible_text(parser._body_chunks)
-        ),
+        employment_type=_fallback_employment_type(_visible_text(parser._body_chunks)),
         metadata={"schema_org": False},
         raw_snapshot={},
     )
@@ -413,9 +455,7 @@ async def fetch_job_url(
         # Enforce redirect policy even if an injected client follows redirects.
         async with client.stream("GET", url, follow_redirects=False) as response:
             if response.is_redirect:
-                raise CollectorError(
-                    "通用岗位链接不允许自动跟随跳转，请发送最终 URL"
-                )
+                raise CollectorError("通用岗位链接不允许自动跟随跳转，请发送最终 URL")
             response.raise_for_status()
             content = bytearray()
             async for chunk in response.aiter_bytes(chunk_size=65536):

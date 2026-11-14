@@ -7,17 +7,24 @@ from job_apply_agent.services.orchestrator import ApplicationOrchestrator
 
 def raw_job(source_id: str = "one") -> RawJob:
     return RawJob(
-        source=ATSKind.LEVER, source_id=source_id, company="Acme",
-        title="Software Engineer", url=f"https://jobs.lever.co/acme/{source_id}",
-        location="Remote - US", country="US",
+        source=ATSKind.LEVER,
+        source_id=source_id,
+        company="Acme",
+        title="Software Engineer",
+        url=f"https://jobs.lever.co/acme/{source_id}",
+        location="Remote - US",
+        country="US",
         description="Python role requiring 2 years experience.",
     )
 
 
 def candidate() -> CandidateProfile:
     return CandidateProfile(
-        allowed_countries=["US"], years_experience=4, max_years_gap=1,
-        skills=["python"], target_titles=["Other"],
+        allowed_countries=["US"],
+        years_experience=4,
+        max_years_gap=1,
+        skills=["python"],
+        target_titles=["Other"],
     )
 
 
@@ -42,9 +49,7 @@ def test_ingested_via_is_set_once_on_creation(session):
     policy = SearchPolicy(version=1, high_value_threshold=100)
 
     def jd_raw() -> RawJob:
-        return raw_job("jd-one").model_copy(
-            update={"description": "Manual telegram JD posting."}
-        )
+        return raw_job("jd-one").model_copy(update={"description": "Manual telegram JD posting."})
 
     def collected_raw() -> RawJob:
         return raw_job("col-one").model_copy(
@@ -83,8 +88,10 @@ def test_one_job_can_claim_submit_only_once(session):
     )
     repo = SubmissionRepository()
     run = repo.get_or_create_run(session, application_id=app.job_id, idempotency_key="stable")
-    assert repo.get_or_create_run(session, application_id=app.job_id, idempotency_key="stable").id == run.id
+    assert (
+        repo.get_or_create_run(session, application_id=app.job_id, idempotency_key="stable").id
+        == run.id
+    )
     assert repo.claim_submit(session, run.id)
     assert not repo.claim_submit(session, run.id)
     assert session.query(JobPostingRecord).count() == 1
-

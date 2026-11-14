@@ -268,7 +268,11 @@ async def test_ashby_submit_recognizes_current_success_container_and_message():
         claim = RecordingClaim()
 
         result = await AshbyAdapter(
-            Settings(allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK, submit_confirmation_timeout_seconds=5)
+            Settings(
+                allow_live_submit=True,
+                live_submit_ack=LIVE_SUBMIT_ACK,
+                submit_confirmation_timeout_seconds=5,
+            )
         ).submit(page, claim)
 
         assert result.submitted
@@ -308,7 +312,11 @@ async def test_lever_claims_only_when_real_form_post_is_released():
         claim = RecordingClaim()
 
         result = await LeverAdapter(
-            Settings(allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK, submit_confirmation_timeout_seconds=5)
+            Settings(
+                allow_live_submit=True,
+                live_submit_ack=LIVE_SUBMIT_ACK,
+                submit_confirmation_timeout_seconds=5,
+            )
         ).submit(page, claim)
 
         assert result.submitted
@@ -352,7 +360,11 @@ async def test_lever_hcaptcha_without_post_does_not_claim_submit():
 
         with pytest.raises(ATSBlocked) as exc_info:
             await LeverAdapter(
-                Settings(allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK, submit_confirmation_timeout_seconds=5)
+                Settings(
+                    allow_live_submit=True,
+                    live_submit_ack=LIVE_SUBMIT_ACK,
+                    submit_confirmation_timeout_seconds=5,
+                )
             ).submit(page, claim)
 
         assert exc_info.value.kind is BlockerKind.CAPTCHA
@@ -382,7 +394,11 @@ async def test_lever_post_without_confirmation_keeps_claim_and_response_evidence
         await page.goto(url)
         claim = RecordingClaim()
         adapter = LeverAdapter(
-            Settings(allow_live_submit=True, live_submit_ack=LIVE_SUBMIT_ACK, submit_confirmation_timeout_seconds=5)
+            Settings(
+                allow_live_submit=True,
+                live_submit_ack=LIVE_SUBMIT_ACK,
+                submit_confirmation_timeout_seconds=5,
+            )
         )
 
         async def no_confirmation(page, before_url):

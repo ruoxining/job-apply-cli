@@ -1,4 +1,4 @@
-# Job Apply Agent
+# Job Apply CLI
 
 [English](README.en.md) | 简体中文
 
@@ -15,17 +15,17 @@
 ```bash
 uv sync --frozen --extra test
 cp .env.example .env
-uv run job-apply-agent onboard init
+uv run job-apply-cli onboard init
 ```
 
 初始化只在 `private/candidate/` 创建本地模板，不上传文件、不请求模型、不采集或投递。
 接下来按 [首次使用指引](docs/onboarding.md) 填写资料、放入已审核的 PDF/DOCX，再执行：
 
 ```bash
-uv run job-apply-agent onboard check
-uv run job-apply-agent init-db
-uv run job-apply-agent onboard import-answers
-uv run job-apply-agent serve
+uv run job-apply-cli onboard check
+uv run job-apply-cli init-db
+uv run job-apply-cli onboard import-answers
+uv run job-apply-cli serve
 ```
 
 模板含有待替换标记，首次检查失败是预期行为。默认 SQLite 数据库、经历、浏览器状态和
@@ -75,10 +75,13 @@ python3 scripts/export_public.py --check
 公开源文件由 `public-files.txt` 明确列出。发布前生成不含旧 Git 历史的全新本地目录：
 
 ```bash
-python3 scripts/export_public.py --output ../job-apply-agent-public
+python3 scripts/export_public.py --output ../job-apply-cli-export
 ```
 
 该命令不会创建远程仓库、提交、推送或上传。已有目录不会被覆盖。原始工作区的历史可能
 包含此前的个人配置，不能用一次当前文件检查代替历史清理；共享时使用检查后的导出目录。
 
 保留现有 Apache-2.0 许可证，第三方浏览器和模型运行时不随项目分发。
+
+协作流程见 [贡献指南](CONTRIBUTING.md)、[审核标准](docs/review-policy.md) 和 [自动化配置](docs/automation.md)。
+发行包名为 `job-apply-cli`；旧命令 `job-apply-agent` 仍可使用。

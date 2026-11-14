@@ -12,7 +12,6 @@ from job_apply_agent.collectors.job_link import (
 )
 from job_apply_agent.domain.enums import ATSKind
 
-
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
@@ -88,9 +87,7 @@ def test_parse_html_fallback_prefers_meta_tags():
 
 
 def test_parse_html_fallback_company_falls_back_to_hostname():
-    job = parse_job_page(
-        "https://jobs.acme.ca/jobs/5", _fixture("job_page_hostname_company.html")
-    )
+    job = parse_job_page("https://jobs.acme.ca/jobs/5", _fixture("job_page_hostname_company.html"))
 
     assert job.title == "Platform Engineer"
     assert job.company == "acme"

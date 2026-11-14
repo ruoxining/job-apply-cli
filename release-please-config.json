@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "python",
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "bootstrap-sha": "e6aecd4b2e09da044b1b02240c94726c9a1d2ecc",
+  "packages": {
+    ".": {
+      "package-name": "job-apply-cli",
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name=='job-apply-cli')].version"
+        }
+      ]
+    }
+  }
+}

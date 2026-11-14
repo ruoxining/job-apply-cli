@@ -9,9 +9,9 @@ from __future__ import annotations
 import hashlib
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 revision: str = "e7b2a9c4d103"
 down_revision: Union[str, None] = "c4a8f8b14f21"
@@ -67,12 +67,17 @@ def upgrade() -> None:
         op.add_column("job_postings", column)
 
     bind = op.get_bind()
-    jobs = bind.execute(sa.text("SELECT id, company, title, location, source, source_id, url, normalized, created_at, updated_at FROM job_postings ORDER BY created_at, id")).mappings()
+    jobs = bind.execute(
+        sa.text(
+            "SELECT id, company, title, location, source, source_id, url, normalized, created_at, updated_at FROM job_postings ORDER BY created_at, id"
+        )
+    ).mappings()
     used: set[str] = set()
     for job in jobs:
         normalized = job["normalized"] or {}
         if isinstance(normalized, str):
             import json
+
             normalized = json.loads(normalized)
         canonical = _key(
             job["company"], job["title"], job["location"], normalized.get("description", "")
@@ -91,12 +96,15 @@ def upgrade() -> None:
             """).bindparams(sa.bindparam("sources", type_=sa.JSON())),
             {
                 "canonical": canonical,
-                "sources": [{"source": job["source"], "source_id": job["source_id"], "url": job["url"]}],
+                "sources": [
+                    {"source": job["source"], "source_id": job["source_id"], "url": job["url"]}
+                ],
                 "id": job["id"],
             },
         )
 
-    bind.execute(sa.text("""
+    bind.execute(
+        sa.text("""
         UPDATE job_postings SET
           eligible=COALESCE((SELECT eligible FROM priority_assessments p WHERE p.job_id=job_postings.id ORDER BY p.updated_at DESC LIMIT 1), eligible),
           score=COALESCE((SELECT score FROM priority_assessments p WHERE p.job_id=job_postings.id ORDER BY p.updated_at DESC LIMIT 1), score),
@@ -108,8 +116,10 @@ def upgrade() -> None:
           form_answers=COALESCE((SELECT form_answers FROM applications a WHERE a.job_id=job_postings.id ORDER BY a.updated_at DESC LIMIT 1), form_answers),
           blocker=(SELECT blocker FROM applications a WHERE a.job_id=job_postings.id ORDER BY a.updated_at DESC LIMIT 1),
           submitted_at=(SELECT submitted_at FROM applications a WHERE a.job_id=job_postings.id ORDER BY a.updated_at DESC LIMIT 1)
-    """))
-    bind.execute(sa.text("""
+    """)
+    )
+    bind.execute(
+        sa.text("""
         UPDATE job_postings SET
           resume_template=(SELECT template FROM resume_variants r WHERE r.job_id=job_postings.id ORDER BY r.updated_at DESC LIMIT 1),
           resume_fact_ids=COALESCE((SELECT fact_ids FROM resume_variants r WHERE r.job_id=job_postings.id ORDER BY r.updated_at DESC LIMIT 1), resume_fact_ids),
@@ -118,8 +128,10 @@ def upgrade() -> None:
           resume_pdf_path=(SELECT pdf_path FROM resume_variants r WHERE r.job_id=job_postings.id ORDER BY r.updated_at DESC LIMIT 1),
           resume_sha256=(SELECT sha256 FROM resume_variants r WHERE r.job_id=job_postings.id ORDER BY r.updated_at DESC LIMIT 1),
           resume_generated_at=(SELECT created_at FROM resume_variants r WHERE r.job_id=job_postings.id ORDER BY r.updated_at DESC LIMIT 1)
-    """))
-    bind.execute(sa.text("""
+    """)
+    )
+    bind.execute(
+        sa.text("""
         UPDATE job_postings SET
           submission_key=(SELECT ar.idempotency_key FROM application_runs ar JOIN applications a ON a.id=ar.application_id WHERE a.job_id=job_postings.id ORDER BY ar.updated_at DESC LIMIT 1),
           submission_status=COALESCE((SELECT ar.status FROM application_runs ar JOIN applications a ON a.id=ar.application_id WHERE a.job_id=job_postings.id ORDER BY ar.updated_at DESC LIMIT 1), submission_status),
@@ -127,13 +139,25 @@ def upgrade() -> None:
           receipt=(SELECT ar.receipt FROM application_runs ar JOIN applications a ON a.id=ar.application_id WHERE a.job_id=job_postings.id ORDER BY ar.updated_at DESC LIMIT 1),
           submit_started_at=(SELECT ar.submit_started_at FROM application_runs ar JOIN applications a ON a.id=ar.application_id WHERE a.job_id=job_postings.id ORDER BY ar.updated_at DESC LIMIT 1),
           submit_completed_at=(SELECT ar.submit_completed_at FROM application_runs ar JOIN applications a ON a.id=ar.application_id WHERE a.job_id=job_postings.id ORDER BY ar.updated_at DESC LIMIT 1)
-    """))
+    """)
+    )
 
-    for table in ("application_runs", "applications", "resume_variants", "priority_assessments", "search_policy_versions", "profile_facts", "daily_quotas", "source_runs", "discovery_runs"):
+    for table in (
+        "application_runs",
+        "applications",
+        "resume_variants",
+        "priority_assessments",
+        "search_policy_versions",
+        "profile_facts",
+        "daily_quotas",
+        "source_runs",
+        "discovery_runs",
+    ):
         op.drop_table(table)
     # Older ingestion allowed repeated rows for an identical source posting.
     # Keep the most advanced/current row before adding the uniqueness guard.
-    bind.execute(sa.text("""
+    bind.execute(
+        sa.text("""
         DELETE FROM job_postings WHERE id IN (
           SELECT id FROM (
             SELECT id, ROW_NUMBER() OVER (
@@ -147,7 +171,8 @@ def upgrade() -> None:
             ) AS duplicate_rank FROM job_postings
           ) ranked WHERE duplicate_rank > 1
         )
-    """))
+    """)
+    )
     with op.batch_alter_table("job_postings") as batch:
         batch.drop_column("raw_snapshot")
         batch.drop_column("possible_duplicate")

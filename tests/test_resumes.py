@@ -23,11 +23,20 @@ def test_resume_variant_is_persisted_with_fact_trace(session, tmp_path: Path):
         metrics=["35%"],
         source="resume-metadata",
     )
-    session.add(JobPostingRecord(
-        id="posting-1", canonical_key="1" * 64, source="lever", source_id="job-1",
-        sources=[], company="Acme", title="Backend Engineer",
-        url="https://example.test/job-1", location="", normalized={},
-    ))
+    session.add(
+        JobPostingRecord(
+            id="posting-1",
+            canonical_key="1" * 64,
+            source="lever",
+            source_id="job-1",
+            sources=[],
+            company="Acme",
+            title="Backend Engineer",
+            url="https://example.test/job-1",
+            location="",
+            normalized={},
+        )
+    )
     session.flush()
     record = service.create(session, job_id="posting-1", job=job, facts=[fact])
 

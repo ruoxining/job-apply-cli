@@ -56,7 +56,7 @@ async def inspect_captcha(page: Any) -> dict:
 
 
 async def _inspect_captcha(page: Any) -> dict:
-    evidence = []
+    evidence: list[dict[str, Any]] = []
     for index, frame in enumerate(page.frames):
         if frame != page.main_frame:
             # Provider frames are identified from their outer iframe, never operated.

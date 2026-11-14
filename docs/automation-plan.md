@@ -41,9 +41,9 @@ application submission is part of this task.
 ## Current prerequisites
 
 - Second contributor: owner explicitly deferred adding the account.
-- PR-Agent: existing GLM service selected; credential location requested.
+- PR-Agent: existing Z.ai GLM service selected; environment credential configured securely.
 - Claude credentials: required only to exercise its on-demand entry point.
-- PyPI enabled by owner request for job-apply-cli; browser is at account login for binding.
+- PyPI enabled by owner request for job-apply-cli; account requires 2FA enrollment before binding.
 
 ## Baseline evidence
 
@@ -91,3 +91,14 @@ GLM 密钥位置与 PyPI 登录、可信发布绑定仍需完成。未勾选项�
 首次 GitHub 检查已验证 Linux/macOS 安装与审核器接口；Windows 暴露的命令路径和测试数据库句柄
 问题已修复，未放宽断言。私有仓库当前不能开启 GitHub secret scanning/push protection，改由 CI
 中的 Gitleaks 扫描历史。CodeQL 配置已准备，但尚未启用。开发解释器固定为与 CI 相同的 3.12。
+
+- All three OS installation jobs now pass on GitHub. The Linux dependency audit found that
+  PyPI cannot look up the official `torch` CPU wheel local-version suffix. CI now maps only
+  `torch==VERSION+cpu` to its public version for advisory lookup, preserving all markers and
+  requirements. The mapped version and full lockfile audit pass locally.
+- The existing Z.ai credential is stored in the main-only `ai-review` environment. The
+  provider URL follows the existing Coding service; no key is committed or printed. A real
+  current-SHA review still needs verification after CI succeeds.
+
+三系统安装已在 GitHub 通过；依赖审计仅对官方 PyTorch CPU 包做公共版本映射，保留全部依赖与
+环境条件。GLM 凭据已安全配置，实际 PR 审核待 CI 完成后验证。PyPI 当前要求账号先设置 2FA。

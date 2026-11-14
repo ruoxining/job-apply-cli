@@ -166,7 +166,7 @@ def main() -> int:
     attempt("ai-review environment limited to main", lambda: environment("ai-review"))
     attempt("pypi environment limited to main", lambda: environment("pypi"))
     variables = {
-        "PR_AGENT_API_BASE": "https://open.bigmodel.cn/api/paas/v4",
+        "PR_AGENT_API_BASE": "https://api.z.ai/api/coding/paas/v4",
         "PR_AGENT_MODEL": "openai/glm-5.3-flash",
         "PYPI_PUBLISH_ENABLED": str(args.enable_pypi).lower(),
     }

@@ -52,7 +52,7 @@ the hidden prompt or pipe it from the local credential store. Never put it in co
 arguments, Git, issues or logs. Variables:
 
 ```text
-PR_AGENT_API_BASE=https://open.bigmodel.cn/api/paas/v4
+PR_AGENT_API_BASE=https://api.z.ai/api/coding/paas/v4
 PR_AGENT_MODEL=openai/glm-5.3-flash
 ```
 
@@ -104,7 +104,7 @@ succeeded; inspect PyPI and the run before retrying. Do not overwrite or recycle
 不会静默降级或自动订购。创建机器人 PR 的 GitHub 开关同时允许机器人批准，但我们的流水线不用
 该能力；CODEOWNERS 只列人工维护者，并要求其中一人审核。
 
-GLM 密钥通过隐藏输入存入仅限 main 的 `ai-review` 环境，名称为 `PR_AGENT_API_KEY`；环境创建
+当前沿用已有的 Z.ai Coding 服务；API 地址与模型见上方变量。GLM 密钥通过隐藏输入存入仅限 main 的 `ai-review` 环境，名称为 `PR_AGENT_API_KEY`；环境创建
 失败时不要把密钥退回普通仓库 secret。审核限制为 40 文件、90 KB、最多 5 条问题及 300 秒；
 失败、超限、截断或无效输出都不能算审核完成。成功执行也不等于批准。
 
@@ -119,6 +119,7 @@ PyPI 必须由已登录账号在上方网页完成一次可信发布绑定，字
 ## Sources / 依据
 
 - [PR-Agent](https://github.com/The-PR-Agent/pr-agent)
+- [Z.ai Coding Plan endpoint](https://zcode.z.ai/en/docs/configuration)
 - [Claude Code Action security](https://github.com/anthropics/claude-code-action/blob/main/docs/security.md)
 - [release-please Action](https://github.com/googleapis/release-please-action)
 - [PyPI Trusted Publishers](https://docs.pypi.org/trusted-publishers/)

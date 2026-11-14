@@ -114,7 +114,7 @@ def run_model(diff: str) -> dict:
         {
             "OPENAI__KEY": key,
             "OPENAI__API_BASE": os.environ.get(
-                "PR_AGENT_API_BASE", "https://open.bigmodel.cn/api/paas/v4"
+                "PR_AGENT_API_BASE", "https://api.z.ai/api/coding/paas/v4"
             ),
             "CONFIG__MODEL": os.environ.get("PR_AGENT_MODEL", "openai/glm-5.3-flash"),
             "CONFIG__USE_REPO_SETTINGS_FILE": "false",

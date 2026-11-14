@@ -43,7 +43,7 @@ application submission is part of this task.
 - Second contributor: owner explicitly deferred adding the account.
 - PR-Agent: existing Z.ai GLM service selected; environment credential configured securely.
 - Claude credentials: required only to exercise its on-demand entry point.
-- PyPI enabled by owner request for job-apply-cli; account requires 2FA enrollment before binding.
+- PyPI pending publisher registered for job-apply-cli, release.yml and environment pypi.
 
 ## Baseline evidence
 
@@ -101,4 +101,15 @@ GLM 密钥位置与 PyPI 登录、可信发布绑定仍需完成。未勾选项�
   current-SHA review still needs verification after CI succeeds.
 
 三系统安装已在 GitHub 通过；依赖审计仅对官方 PyTorch CPU 包做公共版本映射，保留全部依赖与
-环境条件。GLM 凭据已安全配置，实际 PR 审核待 CI 完成后验证。PyPI 当前要求账号先设置 2FA。
+环境条件。GLM 凭据已安全配置，实际 PR 审核待 CI 完成后验证。PyPI 可信发布绑定已保存并核对成功。
+
+- Main CI run 43555049577 passed all checks, including the three OS installations and
+  application/reviewer dependency audits. The existing GLM endpoint returned HTTP 200.
+- PyPI accepted the pending publisher for `ruoxining/job-apply-cli`, workflow `release.yml`,
+  environment `pypi`. No package has been uploaded; a release PR merge remains the decision.
+- Release run 43555382198 created PR #4 and dispatched its CI. That CI correctly rejected
+  a stale project version in uv.lock. The TOML updater's tagged-value representation requires
+  filtering `name.value`; the release configuration is corrected and being revalidated.
+
+主分支 CI 已全部通过，PyPI 可信发布已绑定。发布流程已自动生成 PR #4 并执行 CI；锁文件版本
+不一致被检查拦截，当前正在修正 release-please 的 TOML 匹配并复验。

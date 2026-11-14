@@ -22,7 +22,9 @@ CLI against a local synthetic provider. Revalidate the patch when upgrading PR-A
 Actions use immutable commit pins. Dependabot updates uv and Actions weekly in groups.
 The release workflow explicitly dispatches CI for the release PR: PRs created with
 `GITHUB_TOKEN` do not otherwise trigger CI. Release packaging is called in the same workflow,
-so the bot-created tag does not depend on a second implicit event.
+so the bot-created tag does not depend on a second implicit event. The pinned release-please
+TOML updater wraps scalar fields; the uv.lock JSONPath deliberately matches `name.value`.
+CI requires the lockfile, module and distribution versions to stay synchronized.
 
 ## GitHub initialization
 

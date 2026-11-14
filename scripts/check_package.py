@@ -7,7 +7,7 @@ import json
 import os
 import sqlite3
 import subprocess
-import sys
+import sysconfig
 import tempfile
 from importlib.metadata import version
 from pathlib import Path
@@ -24,7 +24,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="package smoke ") as directory:
         root = Path(directory)
         candidate = root / "candidate files"
-        executable = Path(sys.executable).parent / (
+        executable = Path(sysconfig.get_path("scripts")) / (
             "job-apply-cli.exe" if os.name == "nt" else "job-apply-cli"
         )
 

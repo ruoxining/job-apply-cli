@@ -124,14 +124,17 @@ def main() -> int:
             {"default_workflow_permissions": "read", "can_approve_pull_request_reviews": True},
         ),
     )
-    attempt(
-        "external contributors need workflow approval",
-        lambda: api(
-            root + "/actions/permissions/fork-pr-contributor-approval",
-            "PUT",
-            {"approval_policy": "all_external_contributors"},
-        ),
-    )
+    if not repository["private"]:
+        attempt(
+            "external contributors need workflow approval",
+            lambda: api(
+                root + "/actions/permissions/fork-pr-contributor-approval",
+                "PUT",
+                {"approval_policy": "all_external_contributors"},
+            ),
+        )
+    else:
+        print("SKIP: external contributor approval policy applies to public repositories")
     attempt("Dependabot alerts", lambda: api(root + "/vulnerability-alerts", "PUT"))
     attempt("Dependabot security updates", lambda: api(root + "/automated-security-fixes", "PUT"))
 
@@ -178,7 +181,7 @@ def main() -> int:
             ),
         )
 
-    security = repository.get("security_and_analysis", {})
+    security = repository.get("security_and_analysis") or {}
     # Enable supported features only; do not enroll private repositories into paid products.
     for feature in ("secret_scanning", "secret_scanning_push_protection"):
         if feature in security or not repository["private"]:

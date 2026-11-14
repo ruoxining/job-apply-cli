@@ -1,0 +1,20 @@
+.git
+.env
+.env.*
+private
+docs
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.log
+*.pem
+*.key
+.venv
+__pycache__
+.pytest_cache
+artifacts
+browser-profile
+tests
+# resume submodule is mounted as data at runtime, never baked into the image
+resume

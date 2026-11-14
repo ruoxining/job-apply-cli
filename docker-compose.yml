@@ -1,0 +1,170 @@
+# Optional self-hosted stack. Private candidate files are mounted at runtime.
+#
+#   docker compose up -d
+#
+# Requires a .env file with TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID,
+# candidate files under CANDIDATE_DIR, and any other overrides.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobbot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-jobbot}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobbot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-jobbot}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-jobbot}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    command: ["uvicorn", "job_apply_agent.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment: &app-env
+      APP_ENV: ${APP_ENV:-production}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-jobbot}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-jobbot}
+      REDIS_URL: redis://redis:6379/0
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      ARTIFACTS_DIR: /data/artifacts
+      SUBMIT_CONFIRMATION_TIMEOUT_SECONDS: ${SUBMIT_CONFIRMATION_TIMEOUT_SECONDS:-20}
+      ALLOW_LIVE_SUBMIT: ${ALLOW_LIVE_SUBMIT:-false}
+      SOURCE_BOARDS_JSON: ${SOURCE_BOARDS_JSON:-[]}
+      DAILY_FETCH_LIMIT: ${DAILY_FETCH_LIMIT:-20}
+      PROFILE_JSON: ${PROFILE_JSON:-{}}
+      PROFILE_PATH: /candidate/profile.json
+      SOURCE_BOARDS_PATH: /candidate/source-boards.json
+      ANSWER_BANK_PATH: /candidate/answer-bank.json
+      SEARCH_POLICY_PATH: /candidate/search-policy.json
+      EXPERIENCE_LIBRARY_PATH: /candidate/experiences.json
+      RESUME_FILE: /candidate/${RESUME_FILENAME:-resume.pdf}
+      DAILY_AUTO_SUBMIT_LIMIT: ${DAILY_AUTO_SUBMIT_LIMIT:-10}
+      HIGH_VALUE_THRESHOLD: ${HIGH_VALUE_THRESHOLD:-65}
+      COLLECTION_HOUR_UTC: ${COLLECTION_HOUR_UTC:-6}
+    volumes:
+      - artifacts:/data/artifacts
+      - ${CANDIDATE_DIR:-./private/candidate}:/candidate:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    ports:
+      # Keep operations and job data private; query it through the SSH status script.
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    build: .
+    # Keep xvfb-run below a real init process. As PID 1 it can miss the
+    # Xvfb readiness signal and stall before Dramatiq ever starts.
+    init: true
+    # Browser submissions share one persistent Chromium profile. Keep this worker
+    # single-flight so concurrent applications cannot corrupt or lock it.
+    command:
+      - xvfb-run
+      - -a
+      - dbus-run-session
+      - --
+      - sh
+      - -c
+      - >-
+        /usr/libexec/at-spi-bus-launcher --launch-immediately --a11y=1
+        --screen-reader=1 & sleep 1; exec python -m dramatiq job_apply_agent.tasks
+        --processes 1 --threads 1
+    environment:
+      <<: *app-env
+      BROWSER_PROFILE_DIR: /data/browser-profile
+      BROWSER_CHANNEL: ${BROWSER_CHANNEL:-chromium}
+      BROWSER_HEADLESS: ${BROWSER_HEADLESS:-false}
+      CUA_ENABLED: ${CUA_ENABLED:-false}
+      CUA_BACKEND: ${CUA_BACKEND:-driver}
+      GLM_BASE_URL: ${GLM_BASE_URL:-https://open.bigmodel.cn/api/paas/v4}
+      GLM_API_KEY: ${GLM_API_KEY:-}
+      GLM_MODEL: ${GLM_MODEL:-glm-5.3-flash}
+      GLM_REASONING_EFFORT: ${GLM_REASONING_EFFORT:-high}
+      CUA_MAX_STEPS: ${CUA_MAX_STEPS:-20}
+      CUA_STEP_TIMEOUT_SECONDS: ${CUA_STEP_TIMEOUT_SECONDS:-120}
+      CUA_DRIVER_ATTACH_TIMEOUT_SECONDS: ${CUA_DRIVER_ATTACH_TIMEOUT_SECONDS:-20}
+      CUA_BROWSER_INPUT_ROUTE: ${CUA_BROWSER_INPUT_ROUTE:-dom_event}
+      CUA_INSTRUCTIONS: ${CUA_INSTRUCTIONS:-}
+      BROWSER_PAGE_READY_TIMEOUT_SECONDS: ${BROWSER_PAGE_READY_TIMEOUT_SECONDS:-30}
+      EXPERIENCE_REASONING_ENABLED: ${EXPERIENCE_REASONING_ENABLED:-false}
+      EXPERIENCE_RETRIEVAL_MODE: ${EXPERIENCE_RETRIEVAL_MODE:-full}
+      EXPERIENCE_RETRIEVAL_TOP_K: ${EXPERIENCE_RETRIEVAL_TOP_K:-5}
+      EXPERIENCE_AUTO_CHAR_THRESHOLD: ${EXPERIENCE_AUTO_CHAR_THRESHOLD:-24000}
+      EXPERIENCE_CACHE_PATH: /data/artifacts/experience-vectors.sqlite3
+    volumes:
+      - artifacts:/data/artifacts
+      - browser-profile:/data/browser-profile
+      - ${CANDIDATE_DIR:-./private/candidate}:/candidate:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    # Runs a lightweight loop that dispatches collect_configured_boards daily.
+    command: ["python", "-m", "job_apply_agent.scheduler"]
+    environment: *app-env
+    volumes:
+      - ${CANDIDATE_DIR:-./private/candidate}:/candidate:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  telegram-bot:
+    build: .
+    command: ["python", "-m", "job_apply_agent.telegram.review"]
+    environment: *app-env
+    volumes:
+      - artifacts:/data/artifacts
+      - ${CANDIDATE_DIR:-./private/candidate}:/candidate:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  artifacts:
+  browser-profile:

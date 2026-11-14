@@ -1,0 +1,10 @@
+[
+  {
+    "ats": "greenhouse",
+    "board_slug": "REPLACE_WITH_REAL_BOARD_SLUG",
+    "enabled": false,
+    "max_jobs": 3,
+    "title_keywords": [],
+    "location_keywords": []
+  }
+]

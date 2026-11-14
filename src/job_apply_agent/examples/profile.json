@@ -1,0 +1,24 @@
+{
+  "allowed_countries": [],
+  "accepts_remote": true,
+  "allowed_job_families": [],
+  "years_experience": 0,
+  "company_experience_years": 0,
+  "industry_experience_years": 0,
+  "max_years_gap": 2,
+  "accepted_employment_modes": ["full_time"],
+  "skills": ["REPLACE_WITH_YOUR_SKILL"],
+  "work_authorized_countries": [],
+  "sponsorship_required": false,
+  "target_titles": ["REPLACE_WITH_TARGET_TITLE"],
+  "facts": [
+    {
+      "id": "project-1",
+      "statement": "REPLACE_WITH_A_VERIFIABLE_EXPERIENCE_STATEMENT",
+      "skills": [],
+      "metrics": [],
+      "source": "REPLACE_WITH_YOUR_EVIDENCE_REFERENCE",
+      "allowed_rewrites": []
+    }
+  ]
+}

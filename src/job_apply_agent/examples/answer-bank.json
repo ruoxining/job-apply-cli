@@ -1,0 +1,7 @@
+[
+  {"semantic_key": "first_name", "answer": "REPLACE_FIRST_NAME", "regions": [], "sensitivity": "normal"},
+  {"semantic_key": "last_name", "answer": "REPLACE_LAST_NAME", "regions": [], "sensitivity": "normal"},
+  {"semantic_key": "full_name", "answer": "REPLACE_FULL_NAME", "regions": [], "sensitivity": "normal"},
+  {"semantic_key": "email", "answer": "candidate@example.test", "regions": [], "sensitivity": "normal"},
+  {"semantic_key": "phone", "answer": "REPLACE_PHONE_OR_REMOVE_THIS_ENTRY", "regions": [], "sensitivity": "normal"}
+]

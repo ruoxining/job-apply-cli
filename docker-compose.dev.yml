@@ -1,0 +1,39 @@
+# Local development: only infrastructure services.
+# App runs on the host via `uv run job-apply-agent serve`.
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#   DATABASE_URL=postgresql+psycopg://jobbot:jobbot@localhost:5433/jobbot \
+#     REDIS_URL=redis://localhost:6379/0 \
+#     uv run job-apply-agent serve
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      # Host port configurable to avoid clashes with other local postgres
+      # instances (e.g. another project's container on 5432).
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    environment:
+      POSTGRES_USER: jobbot
+      POSTGRES_PASSWORD: jobbot
+      POSTGRES_DB: jobbot
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobbot"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:

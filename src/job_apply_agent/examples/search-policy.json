@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "high_value_threshold": 65,
+  "company_whitelist": [],
+  "title_whitelist": [],
+  "low_stakes_companies": [],
+  "low_stakes_title_keywords": [],
+  "company_blacklist": [],
+  "excluded_keywords": [],
+  "exclude_student_only": false,
+  "exclude_citizenship_required": false,
+  "preferred_companies": {},
+  "preferred_locations": [],
+  "weights": {"company": 35, "role": 25, "match": 25, "opportunity": 15}
+}

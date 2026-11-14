@@ -9,6 +9,7 @@ import sqlite3
 import subprocess
 import sysconfig
 import tempfile
+from contextlib import closing
 from importlib.metadata import version
 from pathlib import Path
 
@@ -104,7 +105,7 @@ def main() -> None:
         for _ in range(2):
             imported = run("onboard", "import-answers")
             assert not imported.stderr and json.loads(imported.stdout) == {"imported": 3}
-        with sqlite3.connect(database) as connection:
+        with closing(sqlite3.connect(database)) as connection:
             assert connection.execute("SELECT COUNT(*) FROM answer_bank").fetchone()[0] == 3
         report = run("application-report")
         assert not report.stderr and isinstance(json.loads(report.stdout), dict)

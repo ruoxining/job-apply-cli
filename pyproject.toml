@@ -55,7 +55,7 @@ include = [
   "/src", "/tests", "/scripts", "/docs", "/alembic",
   "/README.md", "/README.en.md", "/LICENSE", "/pyproject.toml", "/uv.lock", "/alembic.ini",
   "/Dockerfile", "/docker-compose.yml", "/docker-compose.dev.yml",
-  "/.github", "/CONTRIBUTING.md", "/CHANGELOG.md",
+  "/.github", "/.python-version", "/CONTRIBUTING.md", "/CHANGELOG.md",
   "/release-please-config.json", "/.release-please-manifest.json",
   "/.env.example", "/.gitignore", "/.dockerignore", "/public-files.txt",
 ]

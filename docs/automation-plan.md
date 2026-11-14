@@ -67,8 +67,9 @@ merely adding workflow YAML. This file is the implementation checklist, not a co
 - Locked application/development dependencies have no known vulnerabilities in the local audit.
 - Pinned PR-Agent CLI exercised against a local fake OpenAI-compatible endpoint; trusted
   policy and structured output verified without contacting a model provider.
-- PR-Agent dependency audit found CVE-2026-126360 in opentelemetry-api 1.45.1; fixing the
-  review environment before rollout.
+- PR-Agent dependency audit found CVE-2026-126360 in opentelemetry-api 1.45.1. The trusted
+  installer patches its OpenTelemetry metadata pins to 1.45.2; compatibility, fake-provider
+  contract and vulnerability audit now pass.
 - GitHub main-only `ai-review` and `pypi` environments created. Ruleset exists in disabled
   bootstrap state until actual CI succeeds; do not describe main as protected yet.
 
@@ -78,3 +79,15 @@ merely adding workflow YAML. This file is the implementation checklist, not a co
 第二位贡献者用户名暂不添加，模型沿用 GLM，PyPI 发布已获授权。项目改名为 job-apply-cli，仍为
 私有仓库。主分支规则待首次 CI 实测通过后启用；本地检查结果不能代替 GitHub 上的实际执行结果。
 GLM 密钥位置与 PyPI 登录、可信发布绑定仍需完成。未勾选项表示尚未完成全部验收。
+
+- First GitHub runs passed Linux/macOS package installation and the reviewer contract audit.
+  Windows revealed a platform-specific executable path and an unclosed smoke-test SQLite
+  handle; both were corrected without relaxing assertions or ignoring cleanup failures.
+- GitHub rejected native secret scanning/push protection as unavailable for this private
+  repository. Gitleaks scans history in CI; CodeQL is present but disabled without access.
+- Development Python is pinned to 3.12, matching CI. This also avoids a local Python 3.14
+  editable-install problem when macOS marks `.pth` files hidden.
+
+首次 GitHub 检查已验证 Linux/macOS 安装与审核器接口；Windows 暴露的命令路径和测试数据库句柄
+问题已修复，未放宽断言。私有仓库当前不能开启 GitHub secret scanning/push protection，改由 CI
+中的 Gitleaks 扫描历史。CodeQL 配置已准备，但尚未启用。开发解释器固定为与 CI 相同的 3.12。

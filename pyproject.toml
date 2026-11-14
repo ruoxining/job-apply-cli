@@ -42,7 +42,7 @@ job-apply-agent = "job_apply_agent.cli:main"
 [dependency-groups]
 dev = [
   "ruff>=0.15,<1",
-  "mypy>=1.19,<2",
+  "mypy>=1.19,<3",
   "bandit[toml]>=1.9,<2",
   "pip-audit>=2.9,<3",
 ]

@@ -45,6 +45,7 @@ docs/en/onboarding.md
 docs/en/operations.md
 docs/en/project-structure.md
 docs/en/security-review.md
+docs/experience-library-template.json
 docs/onboarding.md
 docs/operations.md
 docs/project-structure.md

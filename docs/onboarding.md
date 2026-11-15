@@ -37,23 +37,26 @@ The `source` can refer to your project records or local supporting material. Inc
 claims you can confirm. Models must not invent achievements, employment, degrees, or skills.
 `allowed_rewrites` lists equivalent wording that you have reviewed.
 
-The optional `experiences.json` accepts more detailed experience. Its structure is shown
-below; the example does not represent anyone's actual background:
+The optional `experiences.json` is a detailed fact library for projects, employment, education,
+publications, awards, and certificates. The initialized file stays empty so fictional examples
+cannot be mistaken for your background. See the [copyable example](experience-library-template.json)
+and replace every fictional detail before using it.
 
-```json
-{
-  "projects": [{
-    "id": "sample-project",
-    "name": "Example service",
-    "description": ["Built and tested a small Python service."],
-    "skills": ["Python"]
-  }],
-  "experience": [], "education": [], "publications": [], "awards": [], "certificate": []
-}
-```
+Write each entry so it makes sense without the rest of your resume:
 
-Leave lists empty when you have no detailed entries. Experience reasoning also requires a
-configured model backend; ordinary initialization does not enable it.
+- Give it a stable `id`, a clear name, your actual role, and the organization or project context.
+- Use `description` as a list of concise bullets. State what **you** owned, what you did, and the
+  technical or research method. Separate your contribution from the team's result.
+- Include outcomes only when you can support them. For metrics, include the baseline, comparison,
+  units, and measurement scope; keep the source in `evidence_refs` or your private notes.
+- Add dates, skills, and evidence references where they help retrieval. Evidence paths should point
+  to files kept locally; never add confidential employer or research material to this repository.
+- Leave unknown values out. If you do not have a measured result, describe the verified work without
+  adding an estimate. Do not include a skill just because a job description asks for it.
+
+The supported top-level lists are `experience`, `projects`, `education`, `publications`, `awards`,
+and `certificate`. The loader keeps other fields on each entry as supporting metadata. This is a
+flexible JSON format, so the example shows recommended fields rather than a strict required schema.
 
 ## 3. Enter reusable answers
 

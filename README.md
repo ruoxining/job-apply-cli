@@ -68,6 +68,12 @@ about qualifications or consent require supporting evidence or an explicit choic
 - Install browser dependencies separately with `uv sync --frozen --extra browser`. Driver, Codex, and LCU have different prerequisites; see operations.
 - Telegram, model services, and ATS providers receive different subsets of personal data; see [data privacy](docs/data-privacy.md).
 
+## Codex-assisted application preparation
+
+Set `CUA_ENABLED=true` and `CUA_BACKEND=codex` to use the Codex route. The Codex CLI (default model `gpt-6-astra`) reads the current page screenshot and structured DOM, then returns one constrained action at a time. Playwright carries out and verifies field actions. If a DOM action fails twice on the same control, `CODEX_DRIVER_FALLBACK=true` allows the bounded CUA Driver to recover it. This route does not require `GLM_API_KEY`.
+
+The runtime needs an installed, signed-in Codex CLI, the `browser` extra, Chromium, and a visible browser (`BROWSER_HEADLESS=false`, `BROWSER_CHANNEL=chromium`). The planner cannot submit the application; final submission uses the separate live-submit controls. See [operations](docs/operations.md) for backend setup and limits.
+
 ## Development and documentation
 
 [Project structure](docs/project-structure.md) · [Onboarding](docs/onboarding.md) ·

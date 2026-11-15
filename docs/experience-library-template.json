@@ -1,0 +1,29 @@
+{
+  "experience": [],
+  "projects": [
+    {
+      "id": "sample-project-001",
+      "name": "Inventory dashboard (fictional example)",
+      "organization": "Fictional course team",
+      "role": "Student developer",
+      "start_date": "2025-01",
+      "end_date": "2025-04",
+      "description": [
+        "Owned the API and database layer in a fictional four-person coursework team; the team size and project details are illustrative.",
+        "Added a PostgreSQL index and revised one dashboard query; explain your own technical decisions and scope in your real entry.",
+        "In this fictional example only, p95 latency changed from 240 ms to 130 ms on a synthetic 10,000-row dataset. Include a result like this only when your own benchmark supports it."
+      ],
+      "skills": [
+        "Python",
+        "PostgreSQL"
+      ],
+      "evidence_refs": [
+        "private/candidate/evidence/sample-project-benchmark.md (replace with your own local evidence reference)"
+      ]
+    }
+  ],
+  "education": [],
+  "publications": [],
+  "awards": [],
+  "certificate": []
+}

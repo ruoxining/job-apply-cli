@@ -32,21 +32,20 @@ LaTeX 源码、模板工程和个人 resume Git 仓库可以独立放在任意�
 `source` 可写自己的项目记录或本地资料引用。只添加你能确认的内容；没有证据的业绩、
 雇佣经历、学历或技能不能由模型补齐。`allowed_rewrites` 是你已审核的等价表述列表。
 
-可选的 `experiences.json` 接收较长的经历。结构如下，示例不代表任何人的真实背景：
+可选的 `experiences.json` 是详细事实库，用于保存项目、工作、教育、论文、奖项和证书。
+初始化生成的文件保持空白，避免把虚构示例误当成你的经历。可查看[可复制样例](../experience-library-template.json)，
+但使用前必须替换其中所有虚构内容。
 
-```json
-{
-  "projects": [{
-    "id": "sample-project",
-    "name": "Example service",
-    "description": ["Built and tested a small Python service."],
-    "skills": ["Python"]
-  }],
-  "experience": [], "education": [], "publications": [], "awards": [], "certificate": []
-}
-```
+每条经历要能脱离简历其余部分独立看懂：
 
-没有详细经历时保留空列表。启用经历推理前还需配置相应模型后端；普通初始化不启用它。
+- 使用稳定的 `id`，并写清名称、你的实际角色，以及公司、团队或项目背景。
+- `description` 使用简明要点，说明**你本人**负责什么、做了什么、采用什么技术或研究方法；把个人贡献与团队成果分开。
+- 只有能提供依据的结果才写入。指标说明基线、对比值、单位和测量范围；在 `evidence_refs` 或本地笔记中记录证据来源。
+- 按需填写日期、技能和证据引用，帮助检索。证据路径只指向本地文件；不要把雇主或研究中的机密材料放入此仓库。
+- 未知信息直接省略。没有测量结果时，写清可核实的工作内容，不要估算数字；也不要因为职位描述要求某技能就把它加进经历。
+
+顶层列表包括 `experience`、`projects`、`education`、`publications`、`awards` 和 `certificate`。
+加载器会保留每条经历的其他字段作为辅助元数据。这是灵活的 JSON 结构；样例展示推荐字段，不代表严格必填 schema。
 
 ## 3. 填写可复用答案
 

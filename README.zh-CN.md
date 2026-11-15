@@ -59,6 +59,12 @@ uv run job-apply-cli serve
 - 浏览器依赖通过 `uv sync --frozen --extra browser` 单独安装。Driver、Codex、LCU 后端的前提不同，见运行说明。
 - Telegram、模型服务和 ATS 会接收不同范围的个人资料，见 [数据边界](docs/zh-CN/data-privacy.md)。
 
+## 使用 Codex 准备申请表
+
+设置 `CUA_ENABLED=true` 和 `CUA_BACKEND=codex` 可启用 Codex 路径。Codex CLI（默认模型 `gpt-6-astra`）读取当前页面截图和结构化 DOM，每次只返回一个受约束的操作。Playwright 执行并核对字段操作；同一个 DOM 控件连续两次操作失败时，`CODEX_DRIVER_FALLBACK=true` 才会启用受限的 CUA Driver 尝试恢复。此路径不需要 `GLM_API_KEY`。
+
+运行环境需要已安装并登录的 Codex CLI、`browser` extra、Chromium 和可见浏览器（`BROWSER_HEADLESS=false`、`BROWSER_CHANNEL=chromium`）。规划器不能提交申请；最终提交仍受独立的真实投递开关控制。后端配置和适用边界见[运行说明](docs/zh-CN/operations.md)。
+
 ## 开发与文档
 
 [项目结构](docs/zh-CN/project-structure.md) · [首次使用](docs/zh-CN/onboarding.md) ·
